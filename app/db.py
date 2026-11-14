@@ -52,7 +52,10 @@ VALIDATORS = {
             "user_id": {"bsonType": "string"},
             "run_id": {"bsonType": "string"},
             "event": {"enum": ["run_start", "decision", "result", "run_end",
-                                "halt", "approval", "rollback"]},
+                                "halt", "approval", "rollback",
+                                # governed memory (app/memory.py)
+                                "memory_write", "memory_rejected", "memory_read",
+                                "memory_correct", "memory_forget", "memory_denied"]},
             "decision": {"enum": ["ALLOW", "DENY", "NEEDS_APPROVAL", None]},
             "hash": {"bsonType": "string"},
             "prev_hash": {"bsonType": "string"},

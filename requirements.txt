@@ -4,3 +4,13 @@ python-dotenv
 pyyaml
 mongomock   # tests only
 pytest      # tests only
+# Memory agent (LangChain / LangGraph + MongoDB)
+langgraph>=1.2
+langchain-core>=1.8
+langchain-mongodb>=0.12
+langgraph-checkpoint-mongodb>=0.5
+langgraph-store-mongodb>=0.4
+langchain-voyageai>=0.4
+langchain-anthropic>=1.7
+langchain-openai>=1.8
+langchain-google-genai>=4.5
