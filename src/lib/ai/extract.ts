@@ -3,7 +3,7 @@ import { getConfig } from "../config";
 import { FACT_KEYS } from "../lender/engine";
 import { MEMORY_CATEGORIES, ExtractionOutputSchema, type ExtractionOutput, type ExtractedMemory, type Memory, type SourceKind } from "../types";
 import { sentences } from "../util";
-import { anthropicParse } from "./anthropic";
+import { llmParse } from "./llm";
 
 export interface ExtractionInput {
   clientName: string;
@@ -294,7 +294,7 @@ export async function llmExtract(input: ExtractionInput): Promise<ExtractionOutp
     })),
     sourceText: input.text,
   });
-  const parsed = await anthropicParse(EXTRACT_SYSTEM, user, LooseExtraction);
+  const parsed = await llmParse(EXTRACT_SYSTEM, user, LooseExtraction);
   // Strict validation of model output before anything is stored.
   const strict = ExtractionOutputSchema.safeParse(parsed);
   if (!strict.success) throw new Error(`Extractor output failed schema validation: ${strict.error.message}`);
@@ -307,8 +307,8 @@ export async function llmExtract(input: ExtractionInput): Promise<ExtractionOutp
 
 export async function extractMemories(input: ExtractionInput): Promise<{ output: ExtractionOutput; extractor: string }> {
   const cfg = getConfig();
-  if (cfg.planner.provider === "anthropic") {
-    return { output: await llmExtract(input), extractor: `anthropic:${cfg.planner.model}` };
+  if (cfg.planner.live) {
+    return { output: await llmExtract(input), extractor: `${cfg.planner.provider}:${cfg.planner.model}` };
   }
   return { output: demoExtract(input), extractor: "demo-rules-v1" };
 }

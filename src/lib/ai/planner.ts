@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getConfig } from "../config";
 import { PlanOutputSchema, type Attr, type PlanAction, type PlanOutput } from "../types";
-import { anthropicParse } from "./anthropic";
+import { llmParse } from "./llm";
 
 export interface PlannerMemory {
   id: string;
@@ -413,7 +413,7 @@ Rules:
 - lenderChecks are decisions computed in code from the client's advisor-confirmed financial facts against simulated RBC/TD/CIBC policies. Never change, re-derive or second-guess a decision. Use them to prepare follow-ups (for example: which lender fits, what information would resolve a "refer"), cite the factMemoryIds behind them, and say which facts were pivotal. A "refer" caused by a restricted exact credit score means the advisor must route to credit adjudication; do not guess the score.`;
 
 export const llmPlanner: Planner = async (input) => {
-  const parsed = await anthropicParse(PLAN_SYSTEM, JSON.stringify(input), LoosePlan);
+  const parsed = await llmParse(PLAN_SYSTEM, JSON.stringify(input), LoosePlan);
   const strict = PlanOutputSchema.safeParse(parsed);
   if (!strict.success) throw new Error(`Planner output failed schema validation: ${strict.error.message}`);
   return strict.data;
@@ -421,7 +421,7 @@ export const llmPlanner: Planner = async (input) => {
 
 export function getPlanner(): { planner: Planner; label: string } {
   const cfg = getConfig();
-  return cfg.planner.provider === "anthropic"
-    ? { planner: llmPlanner, label: `anthropic:${cfg.planner.model}` }
+  return cfg.planner.live
+    ? { planner: llmPlanner, label: `${cfg.planner.provider}:${cfg.planner.model}` }
     : { planner: demoPlanner, label: "demo-rules-v1" };
 }
