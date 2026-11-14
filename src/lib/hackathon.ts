@@ -98,7 +98,9 @@ const CLIENT_DEFS: ClientDef[] = [
   },
 ];
 
-const read = (rel: string) => fs.readFileSync(path.join(dataDir(), rel), "utf8");
+/** Dataset files are parsed with LF-based patterns; a Windows checkout (autocrlf) stores them with CRLF. */
+const readText = (file: string) => fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n");
+const read = (rel: string) => readText(path.join(dataDir(), rel));
 
 export function loadLenderPolicies(): LenderPolicy[] {
   const dir = path.join(dataDir(), "policies");
@@ -107,7 +109,7 @@ export function loadLenderPolicies(): LenderPolicy[] {
     .filter((f) => f.endsWith(".md"))
     .sort()
     .map((f) => {
-      const text = fs.readFileSync(path.join(dir, f), "utf8");
+      const text = readText(path.join(dir, f));
       const fm = YAML.parse(text.split("---")[1]) as Record<string, unknown>;
       const block = /```yaml\n([\s\S]*?)```/.exec(text);
       if (!block) throw new Error(`No decision_rules block in ${f}`);
