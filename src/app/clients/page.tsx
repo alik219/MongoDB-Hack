@@ -10,7 +10,7 @@ export default function ClientsPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-[32px] leading-tight">Clients</h1>
+        <h1 className="font-serif text-[32px] leading-tight tracking-tight">Clients</h1>
         <p className="text-sm text-muted">
           Clients assigned to {session?.user.name} at {session?.firm?.name}. Clients outside your assignments or firm are not
           listed and cannot be queried.
@@ -35,7 +35,7 @@ export default function ClientsPage() {
               {c.counts.proposed > 0 && <span className="chip bg-info-soft text-info">{c.counts.proposed} proposed</span>}
               {c.counts.expired > 0 && <span className="chip bg-warn-soft text-warn">{c.counts.expired} expired</span>}
               {c.counts.restricted > 0 && <RestrictedBadge />}
-              <span className="chip bg-white/8 text-ink-soft">{c.counts.openTasks} open tasks</span>
+              <span className="chip bg-slate-100 text-slate-600">{c.counts.openTasks} open tasks</span>
               {c.counts.needsReview > 0 && <span className="chip bg-warn-soft text-warn">{c.counts.needsReview} need review</span>}
             </div>
             <div className="mt-4 flex gap-2">

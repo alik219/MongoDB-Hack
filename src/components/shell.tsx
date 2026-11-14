@@ -2,32 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "motion/react";
 import { useState } from "react";
 import { api } from "./api";
 import { useSession } from "./session";
 import { ErrorState, Spinner } from "./ui";
 
-const ICON: Record<string, React.ReactNode> = {
-  agent: (
-    <path d="M8 1.5 2 4.5v3.4c0 3 2.5 5.6 6 6.6 3.5-1 6-3.600 6-6.6V4.5L8 1.5Zm0 3.200a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z" />
-  ),
-  memory: (
-    <path d="M8 1.500c-3.300 0-6 1-6 2.500v8c0 1.500 2.700 2.500 6 2.500s6-1 6-2.500V4c0-1.500-2.700-2.500-6-2.500Zm0 1.500c2.900 0 4.500.800 4.500 1S10.900 5 8 5 3.500 4.200 3.500 4 5.100 3 8 3Zm0 9.500c-2.900 0-4.500-.800-4.500-1V9.800C4.600 10.300 6.200 10.500 8 10.500s3.400-.200 4.500-.700v1.700c0 .200-1.600 1-4.500 1Z" />
-  ),
-  shield: (
-    <path d="M3 2h10v2H3V2Zm0 4h10v2H3V6Zm0 4h6v2H3v-2Zm8.500.500 1 1 2-2.500 1.100.900-3 3.800-2.200-2.100 1.100-1.100Z" />
-  ),
-};
-
-const NAV: {
-  section: string;
-  icon: keyof typeof ICON;
-  items: { href: string; label: string }[];
-}[] = [
+const NAV: { section: string; icon: React.ReactNode; items: { href: string; label: string }[] }[] = [
   {
     section: "Agent",
-    icon: "agent",
+    icon: <path d="M8 1 2.5 3v4.2c0 3.3 2.3 6.3 5.5 7.3 3.2-1 5.5-4 5.5-7.3V3L8 1Zm0 4.3a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4Z" />,
     items: [
       { href: "/workspace", label: "Workspace" },
       { href: "/clients", label: "Clients" },
@@ -35,7 +18,7 @@ const NAV: {
   },
   {
     section: "Memory",
-    icon: "memory",
+    icon: <path d="M8 1.5c-3 0-5.5 1-5.5 2.500v8c0 1.500 2.500 2.500 5.500 2.500s5.500-1 5.500-2.500V4c0-1.500-2.500-2.500-5.500-2.500ZM4 7.200c1 .5 2.400.8 4 .8s3-.3 4-.8v1.600c-.7.5-2.200.9-4 .9s-3.300-.4-4-.9V7.200Z" />,
     items: [
       { href: "/memory", label: "Memories" },
       { href: "/dataset", label: "Dataset" },
@@ -43,7 +26,7 @@ const NAV: {
   },
   {
     section: "Governance",
-    icon: "shield",
+    icon: <path d="M2 3h12v1.800H2V3Zm0 4.100h8v1.800H2V7.100Zm0 4.100h5V13H2v-1.800Zm8.300 1.500 1.500 1.500 3-3.200-1.100-1-1.900 2.100-.5-.5-1 1.100Z" />,
     items: [
       { href: "/activity", label: "Activity Feed" },
       { href: "/compare", label: "Compare Runs" },
@@ -51,19 +34,31 @@ const NAV: {
   },
 ];
 
+const EYEBROW = "text-[10.5px] font-bold uppercase tracking-[0.12em] text-spring";
+
+function Brand() {
+  return (
+    <Link href="/workspace" className="flex items-center gap-2.5">
+      <svg className="h-7 w-7 text-spring" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
+        <path d="M20 12a8 8 0 1 1-3.200-6.400" />
+        <path d="M12 3.500V8" />
+        <circle cx="12" cy="12" r="1.800" fill="currentColor" stroke="none" />
+      </svg>
+      <span className="font-serif text-[26px] leading-none tracking-tight">
+        <span className="text-spring">Recall</span>
+        <span className="text-ink-soft">.IQ</span>
+      </span>
+    </Link>
+  );
+}
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { session, clients, clientId, setClientId, bump, error } = useSession();
   const [busy, setBusy] = useState(false);
   const [showServices, setShowServices] = useState(false);
-  const allLive =
-    session &&
-    session.live.storage &&
-    session.live.embeddings &&
-    session.live.planner;
-  const anyLive =
-    session &&
-    (session.live.storage || session.live.embeddings || session.live.planner);
+  const allLive = session && session.live.storage && session.live.embeddings && session.live.planner;
+  const anyLive = session && (session.live.storage || session.live.embeddings || session.live.planner);
 
   const switchPersona = async (userId: string) => {
     setBusy(true);
@@ -82,92 +77,65 @@ export function Shell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen lg:flex">
-      {/* Sidebar: product mark and sectioned navigation */}
-      <aside className="z-30 shrink-0 border-b border-line bg-canvas lg:sticky lg:top-0 lg:h-screen lg:w-[264px] lg:border-b-0 lg:border-r">
-        <Link
-          href="/workspace"
-          className="flex items-center gap-2.5 px-5 pb-3 pt-5"
-        >
-          <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden>
-            <path d="M12 3.500a8.500 8.500 0 1 0 8.500 8.500" fill="none" stroke="#00ed64" strokeWidth="1.800" strokeLinecap="round" />
-            <path d="M12 3.500l2.800-2.200M12 3.500l2.600 2.400" fill="none" stroke="#00ed64" strokeWidth="1.800" strokeLinecap="round" />
-            <circle cx="12" cy="12" r="2.600" fill="#00ed64" />
-          </svg>
-          <span className="font-serif text-[24px] leading-none text-accent">
-            Recall<span className="text-ink-soft">.IQ</span>
-          </span>
-        </Link>
-        <nav className="flex gap-6 overflow-x-auto px-3 pb-3 lg:block lg:overflow-visible lg:px-0 lg:pb-0 lg:pt-3">
-          {NAV.map((g) => (
-            <div key={g.section} className="shrink-0 lg:mb-5">
-              <p className="flex items-center gap-2 px-2 py-1.5 text-[12px] font-bold uppercase tracking-[0.08em] text-accent lg:px-5">
-                <svg
-                  viewBox="0 0 16 16"
-                  className="h-4 w-4"
-                  fill="currentColor"
-                  aria-hidden
-                >
-                  {ICON[g.icon]}
+    <div className="min-h-screen lg:pl-[232px]">
+      {/* Sidebar (desktop) */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[232px] flex-col border-r border-line bg-canvas lg:flex">
+        <div className="px-5 py-6">
+          <Brand />
+        </div>
+        <nav className="flex-1 space-y-6 overflow-y-auto pb-6 pt-2">
+          {NAV.map((group) => (
+            <div key={group.section}>
+              <p className="mb-1.5 flex items-center gap-2 px-5 text-[11.5px] font-bold uppercase tracking-[0.12em] text-spring">
+                <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+                  {group.icon}
                 </svg>
-                {g.section}
+                {group.section}
               </p>
-              <ul className="flex lg:block">
-                {g.items.map((n) => {
-                  const active = path.startsWith(n.href);
-                  return (
-                    <li key={n.href}>
-                      <Link
-                        href={n.href}
-                        className={`relative block whitespace-nowrap px-3 py-2 text-[14.5px] transition-colors lg:py-2.5 lg:pl-[46px] lg:pr-5 ${active ? "font-semibold text-ink" : "text-ink-soft hover:bg-raised hover:text-ink"}`}
-                      >
-                        {active && (
-                          <motion.span
-                            layoutId="nav-active"
-                            className="absolute inset-0 bg-accent-soft"
-                            transition={{
-                              type: "spring",
-                              stiffness: 420,
-                              damping: 36,
-                            }}
-                          >
-                            <span className="absolute inset-y-0 left-0 hidden w-1 rounded-r bg-accent lg:block" />
-                          </motion.span>
-                        )}
-                        <span className="relative">{n.label}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+              {group.items.map((n) => {
+                const active = path.startsWith(n.href);
+                return (
+                  <Link
+                    key={n.href}
+                    href={n.href}
+                    aria-current={active ? "page" : undefined}
+                    className={`block border-l-[3px] py-2 pl-[37px] pr-4 text-[14.5px] transition ${
+                      active
+                        ? "border-spring bg-evergreen-3 font-semibold text-ink"
+                        : "border-transparent text-ink-soft hover:bg-evergreen-2 hover:text-ink"
+                    }`}
+                  >
+                    {n.label}
+                  </Link>
+                );
+              })}
             </div>
           ))}
         </nav>
+        <p className="border-t border-line px-5 py-3 text-[11px] leading-snug text-muted">
+          Governed memory on <span className="text-spring">MongoDB Atlas</span> Vector Search
+        </p>
       </aside>
 
-      <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-20 border-b border-line bg-canvas/95 backdrop-blur">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2.5 sm:px-8">
+      {/* Top bar */}
+      <header className="sticky top-0 z-20 border-b border-line bg-canvas/95 backdrop-blur">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-7">
+          <div className="lg:hidden">
+            <Brand />
+          </div>
+          <div className="flex items-center gap-4">
             {session?.firm && (
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-accent">
-                  Organization
-                </p>
-                <p className="truncate text-[14.5px] text-ink">
-                  {session.firm.name}
-                </p>
+              <div>
+                <p className={EYEBROW}>Organization</p>
+                <p className="text-sm text-ink">{session.firm.name}</p>
               </div>
             )}
-            {session?.firm && clients.length > 0 && (
-              <span className="text-xl text-muted">›</span>
-            )}
+            {session?.firm && clients.length > 0 && <span className="text-muted">›</span>}
             {clients.length > 0 && (
-              <label className="min-w-0">
-                <span className="block text-[11px] font-bold uppercase tracking-[0.08em] text-accent">
-                  Client
-                </span>
+              <label className="block">
+                <span className={`block ${EYEBROW}`}>Client</span>
                 <select
-                  className="-ml-1 max-w-[60vw] truncate bg-transparent text-[14.5px] text-ink focus:outline-none"
+                  className="-ml-1 cursor-pointer rounded bg-transparent pl-1 pr-1 text-sm text-ink hover:bg-evergreen-2 focus:outline-none focus:ring-1 focus:ring-spring/50"
                   value={clientId ?? ""}
                   onChange={(e) => setClientId(e.target.value)}
                 >
@@ -179,123 +147,99 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 </select>
               </label>
             )}
-            <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3 lg:ml-auto">
-              {session && (
-                <label className="flex min-w-0 max-w-full items-center gap-2 rounded-lg border border-dashed border-warn/50 bg-warn-soft/60 px-2 py-1 text-sm">
-                  <span
-                    className="text-[10px] font-bold uppercase tracking-wider text-warn"
-                    title="Demonstration persona switcher backed by server-defined identities. Not production authentication."
-                  >
-                    Demo persona
-                  </span>
-                  <select
-                    className="min-w-0 max-w-[62vw] truncate bg-transparent text-sm font-medium sm:max-w-none"
-                    value={session.user._id}
-                    disabled={busy}
-                    onChange={(e) => switchPersona(e.target.value)}
-                  >
-                    {session.personas.map((p) => (
-                      <option key={p._id} value={p._id}>
-                        {p.name} ·{" "}
-                        {p.role === "lead_advisor"
-                          ? "Lead advisor"
-                          : "Associate"}{" "}
-                        · {p.firmName}
-                      </option>
-                    ))}
-                  </select>
-                  {busy && <Spinner />}
-                </label>
-              )}
-              {session && (
-                <div className="relative">
-                  <button
-                    className={`chip border px-2 py-1 ${allLive ? "border-accent/30 bg-accent-soft text-accent" : anyLive ? "border-info/30 bg-info-soft text-info" : "border-warn/40 bg-warn-soft text-warn"}`}
-                    onClick={() => setShowServices((s) => !s)}
-                  >
-                    ●{" "}
-                    {allLive
-                      ? "Live services"
-                      : anyLive
-                        ? "Partly live"
-                        : "Demo mode"}
-                  </button>
-                  {showServices && (
-                    <div className="absolute right-0 top-9 w-[340px] rounded-xl border border-line bg-raised p-4 text-sm shadow-2xl shadow-black/60">
-                      <p className="label mb-2">Backing services</p>
-                      {(
-                        [
-                          [
-                            "Storage",
-                            session.services.storage,
-                            session.live.storage,
-                          ],
-                          [
-                            "Retrieval",
-                            session.services.vectorSearch,
-                            session.live.storage,
-                          ],
-                          [
-                            "Embeddings",
-                            session.services.embeddings,
-                            session.live.embeddings,
-                          ],
-                          [
-                            "Extraction & planning",
-                            session.services.planner,
-                            session.live.planner,
-                          ],
-                        ] as const
-                      ).map(([k, v, live]) => (
-                        <div
-                          key={k}
-                          className="flex items-start justify-between gap-3 border-b border-line py-1.5 last:border-0"
-                        >
-                          <span className="text-muted">{k}</span>
-                          <span
-                            className={`text-right ${live ? "text-accent" : "text-warn"}`}
-                          >
-                            {live ? "LIVE · " : "DEMO · "}
-                            {v}
-                          </span>
-                        </div>
-                      ))}
-                      <p className="mt-2 text-xs text-muted">
-                        Demo components are deterministic stand-ins. Nothing
-                        labeled demo came from Atlas or a model.
-                      </p>
-                      {session.allowDemoReset && (
-                        <button
-                          className="btn-secondary mt-3 w-full justify-center"
-                          onClick={reset}
-                          disabled={busy}
-                        >
-                          Reset demo data
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
           </div>
-        </header>
-        <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-8">
-          {error ? (
-            <ErrorState error={error} onRetry={bump} />
-          ) : !session ? (
-            <div className="flex items-center gap-2 text-sm text-muted">
-              <Spinner /> Loading workspace…
-            </div>
-          ) : clients.length === 0 ? (
-            <div className="card p-6 text-sm text-muted">
-              You are not assigned to any clients.
-            </div>
-          ) : (
-            children
-          )}
-        </main>
-      </div>
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3 lg:ml-auto">
+            {session && (
+              <label className="flex min-w-0 max-w-full items-center gap-2 rounded-md border border-dashed border-warn/50 bg-warn-soft/50 px-2.5 py-1.5 text-sm">
+                <span
+                  className="text-[10px] font-bold uppercase tracking-wider text-warn"
+                  title="Demonstration persona switcher backed by server-defined identities. Not production authentication."
+                >
+                  Demo persona
+                </span>
+                <select
+                  className="min-w-0 max-w-[62vw] cursor-pointer truncate bg-transparent text-sm text-ink focus:outline-none sm:max-w-none"
+                  value={session.user._id}
+                  disabled={busy}
+                  onChange={(e) => switchPersona(e.target.value)}
+                >
+                  {session.personas.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name} · {p.role === "lead_advisor" ? "Lead advisor" : "Associate"} · {p.firmName}
+                    </option>
+                  ))}
+                </select>
+                {busy && <Spinner />}
+              </label>
+            )}
+            {session && (
+              <div className="relative">
+                <button
+                  className={`chip border px-2.5 py-1.5 ${allLive ? "border-accent/40 bg-accent-soft text-accent" : anyLive ? "border-info/40 bg-info-soft text-info" : "border-warn/40 bg-warn-soft text-warn"}`}
+                  onClick={() => setShowServices((s) => !s)}
+                >
+                  ● {allLive ? "Live services" : anyLive ? "Partly live" : "Demo mode"}
+                </button>
+                {showServices && (
+                  <div className="absolute right-0 top-10 z-40 w-[340px] rounded-xl border border-line bg-slate-50 p-4 text-sm shadow-2xl">
+                    <p className="label mb-2">Backing services</p>
+                    {(
+                      [
+                        ["Storage", session.services.storage, session.live.storage],
+                        ["Retrieval", session.services.vectorSearch, session.live.storage],
+                        ["Embeddings", session.services.embeddings, session.live.embeddings],
+                        ["Extraction & planning", session.services.planner, session.live.planner],
+                      ] as const
+                    ).map(([k, v, live]) => (
+                      <div key={k} className="flex items-start justify-between gap-3 border-b border-line py-1.5 last:border-0">
+                        <span className="text-muted">{k}</span>
+                        <span className={`text-right ${live ? "text-accent" : "text-warn"}`}>
+                          {live ? "LIVE · " : "DEMO · "}
+                          {v}
+                        </span>
+                      </div>
+                    ))}
+                    <p className="mt-2 text-xs text-muted">
+                      Demo components are deterministic stand-ins. Nothing labeled demo came from Atlas or a model.
+                    </p>
+                    {session.allowDemoReset && (
+                      <button className="btn-secondary mt-3 w-full justify-center" onClick={reset} disabled={busy}>
+                        Reset demo data
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        {/* Navigation (narrow screens) */}
+        <nav className="flex gap-1 overflow-x-auto border-t border-line px-3 py-1.5 text-sm lg:hidden">
+          {NAV.flatMap((g) => g.items).map((n) => (
+            <Link
+              key={n.href}
+              href={n.href}
+              className={`whitespace-nowrap rounded-md px-2.5 py-1.5 font-medium ${path.startsWith(n.href) ? "bg-evergreen-3 text-spring" : "text-ink-soft hover:text-ink"}`}
+            >
+              {n.label}
+            </Link>
+          ))}
+        </nav>
+      </header>
+
+      <main className="px-4 py-6 sm:px-7">
+        {error ? (
+          <ErrorState error={error} onRetry={bump} />
+        ) : !session ? (
+          <div className="flex items-center gap-2 text-sm text-muted">
+            <Spinner /> Loading workspace…
+          </div>
+        ) : clients.length === 0 ? (
+          <div className="card p-6 text-sm text-muted">You are not assigned to any clients.</div>
+        ) : (
+          children
+        )}
+      </main>
     </div>
   );
 }

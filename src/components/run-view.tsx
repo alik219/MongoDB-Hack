@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "motion/react";
 import { fmtDateTime, label } from "./api";
 import { Banner, CategoryBadge, MemoryRef, Spinner } from "./ui";
 
@@ -87,59 +86,41 @@ export const PLANNED_STAGES = [
   "Revalidating & saving tasks",
 ];
 
-/** Live pipeline while a run is in flight: nodes light up in order along a filling track. */
 export function StagesRunning({ step }: { step: number }) {
-  const n = PLANNED_STAGES.length;
   return (
-    <div className="relative overflow-hidden rounded-xl border border-accent/20 bg-accent-soft/40 px-4 py-4">
-      <div className="sheen pointer-events-none absolute inset-0" />
-      <div className="relative">
-        <div className="absolute left-0 right-0 top-[7px] h-px bg-line" />
-        <motion.div
-          className="absolute left-0 top-[7px] h-px bg-gradient-to-r from-[#00a35c] to-[#00ed64]"
-          animate={{ width: `${(Math.min(step, n - 1) / (n - 1)) * 100}%` }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-        />
-        <ol className="relative flex justify-between">
-          {PLANNED_STAGES.map((label, i) => (
-            <li key={label} className="flex w-0 flex-col items-center">
-              <motion.span
-                className={`h-[15px] w-[15px] rounded-full border-2 ${i < step ? "border-accent bg-accent" : i === step ? "border-accent bg-canvas" : "border-line bg-canvas"}`}
-                animate={i === step ? { scale: [1, 1.35, 1], boxShadow: ["0 0 0 0 rgba(0,237,100,.5)", "0 0 0 8px rgba(0,237,100,0)", "0 0 0 0 rgba(0,237,100,0)"] } : { scale: 1 }}
-                transition={i === step ? { duration: 1.1, repeat: Infinity } : { duration: 0.2 }}
-              />
-              <span className={`mt-2 hidden w-24 text-center text-[10.5px] leading-tight sm:block ${i <= step ? "text-ink" : "text-muted"}`}>{label}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
-      <p className="relative mt-3 text-center text-[12px] text-accent sm:hidden">{PLANNED_STAGES[Math.min(step, n - 1)]}…</p>
-    </div>
+    <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px]">
+      {PLANNED_STAGES.map((s, i) => (
+        <li key={s} className="flex items-center gap-1.5">
+          {i < step ? (
+            <span className="text-accent">✓</span>
+          ) : i === step ? (
+            <Spinner className="h-3 w-3" />
+          ) : (
+            <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+          )}
+          <span className={i <= step ? "text-ink" : "text-muted"}>{s}</span>
+          {i < PLANNED_STAGES.length - 1 && <span className="text-slate-300">→</span>}
+        </li>
+      ))}
+    </ol>
   );
 }
 
 export function Stages({ run }: { run: RunDTO }) {
   return (
-    <motion.ol className="relative space-y-0" initial="hidden" animate="show" key={run._id} variants={{ show: { transition: { staggerChildren: 0.045 } } }}>
-      {run.stages.map((s, i) => {
-        const tone = s.status === "done" ? "border-accent/50 bg-accent-soft text-accent" : s.status === "skipped" ? "border-line bg-raised text-muted" : "border-danger/50 bg-danger-soft text-danger";
-        return (
-          <motion.li
-            key={i}
-            className="relative flex items-start gap-3 pb-2.5 text-[12.5px] last:pb-0"
-            variants={{ hidden: { opacity: 0, x: -8 }, show: { opacity: 1, x: 0 } }}
+    <ol className="space-y-1">
+      {run.stages.map((s, i) => (
+        <li key={i} className="flex items-start gap-2 text-[12.5px]">
+          <span
+            className={`mt-0.5 w-3 text-center ${s.status === "done" ? "text-accent" : s.status === "skipped" ? "text-muted" : "text-danger"}`}
           >
-            {i < run.stages.length - 1 && <span className="absolute left-[9px] top-5 h-full w-px bg-line" />}
-            <span className={`relative z-10 mt-px flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full border text-[10px] ${tone}`}>
-              {s.status === "done" ? "✓" : s.status === "skipped" ? "–" : "✕"}
-            </span>
-            <span className="w-48 shrink-0 font-medium text-ink">{s.label}</span>
-            <span className="min-w-0 flex-1 text-muted">{s.detail}</span>
-            <span className="mono shrink-0 text-[10.5px] text-muted/70">{s.ms} ms</span>
-          </motion.li>
-        );
-      })}
-    </motion.ol>
+            {s.status === "done" ? "✓" : s.status === "skipped" ? "–" : "✕"}
+          </span>
+          <span className="w-52 shrink-0 font-medium text-ink">{s.label}</span>
+          <span className="text-muted">{s.detail}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -147,7 +128,7 @@ const ACTION_STYLE: Record<string, string> = {
   create_task: "bg-accent-soft text-accent",
   revise_task: "bg-info-soft text-info",
   withdraw_task: "bg-danger-soft text-danger",
-  keep_task: "bg-white/8 text-ink-soft",
+  keep_task: "bg-slate-100 text-slate-600",
   flag_for_review: "bg-warn-soft text-warn",
 };
 const ACTION_LABEL: Record<string, string> = {
@@ -166,7 +147,7 @@ export function ActionList({ run, onOpenMemory, compact }: { run: RunDTO; onOpen
         <li key={i} className="text-[13px]">
           <div className="flex items-start gap-1.5">
             <span className={`chip mt-px shrink-0 ${ACTION_STYLE[a.type] ?? ""}`}>{ACTION_LABEL[a.type] ?? a.type}</span>
-            <span className={`min-w-0 font-medium ${a.type === "withdraw_task" ? "text-muted line-through decoration-muted" : "text-ink"}`}>{a.title}</span>
+            <span className={`min-w-0 font-medium ${a.type === "withdraw_task" ? "text-muted line-through decoration-slate-300" : "text-ink"}`}>{a.title}</span>
           </div>
           {!compact && a.changedBecause && a.changedBecause.length > 0 && (
             <ul className="ml-1 mt-1 space-y-0.5 border-l-2 border-warn/40 pl-2 text-[12px] text-ink-soft">
@@ -208,7 +189,7 @@ function Points({
     <ul className="space-y-1.5">
       {pts.map((p, i) => (
         <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-ink-soft">
-          <span className="text-muted/60">•</span>
+          <span className="text-slate-300">•</span>
           <span className="min-w-0">
             <span className="first-letter:uppercase">{p.text}</span>{" "}
             {p.memoryIds.map((id) => (
@@ -332,118 +313,59 @@ export function RunMeta({ run, names }: { run: RunDTO; names: Record<string, str
   );
 }
 
-const DECISION_STYLE: Record<string, { chip: string; glow: string; bar: string; word: string }> = {
-  approve: { chip: "bg-accent-soft text-accent ring-1 ring-accent/30", glow: "border-accent/30", bar: "from-[#00a35c] to-[#00ed64]", word: "Approve" },
-  refer: { chip: "bg-warn-soft text-warn ring-1 ring-warn/30", glow: "border-warn/30", bar: "from-[#ffc010] to-[#ffc010]", word: "Refer" },
-  decline: { chip: "bg-danger-soft text-danger ring-1 ring-danger/30", glow: "border-danger/30", bar: "from-[#ff6960] to-[#ff6960]", word: "Decline" },
+const DECISION_STYLE: Record<string, string> = {
+  approve: "bg-accent/10 text-accent",
+  refer: "bg-warn-soft text-warn",
+  decline: "bg-danger-soft text-danger",
 };
-const OUTCOME_MARK: Record<string, string> = { pass: "✓", fail: "✕", unknown: "?" };
-const PRODUCT_LABEL: Record<string, string> = {
-  mortgage: "Mortgage",
-  personal_line_of_credit: "Personal line of credit",
-  business_credit_card: "Business credit card",
-};
+const OUTCOME_MARK: Record<string, string> = { pass: "✓", fail: "✗", unknown: "?" };
 
 /** Lender decisions computed in code from authorized facts, with the facts whose removal flips each one. */
 export function LenderChecksView({ run, onOpenMemory }: { run: RunDTO; onOpenMemory?: (id: string) => void }) {
   const checks = run.lenderChecks ?? [];
   if (!checks.length) return null;
   const versionOf = (id?: string) => run.retrieved.find((r) => r.memoryId === id)?.version ?? 1;
-  const products = [...new Set(checks.map((c) => c.product))];
   return (
-    <div className="space-y-5">
-      <p className="text-[11.5px] leading-relaxed text-muted">
+    <div className="space-y-3">
+      <p className="text-[11px] text-muted">
         Simulated RBC / TD / CIBC policies, evaluated in code (not by the model) against advisor-confirmed facts you are allowed to read.
         “Pivotal” facts are the memories whose removal changes the decision, found by re-running the engine without each one.
       </p>
-      {products.map((product) => (
-        <div key={product}>
-          <p className="label mb-2">{PRODUCT_LABEL[product] ?? label(product)}</p>
-          <motion.div
-            key={run._id + product}
-            className="grid gap-3 md:grid-cols-3"
-            initial="hidden"
-            animate="show"
-            variants={{ show: { transition: { staggerChildren: 0.09 } } }}
-          >
-            {checks
-              .filter((c) => c.product === product)
-              .map((c) => {
-                const st = DECISION_STYLE[c.decision];
-                const passed = c.checks.filter((k) => k.outcome === "pass").length;
-                return (
-                  <motion.div
-                    key={c.policyId}
-                    className={`relative overflow-hidden rounded-xl border bg-raised/70 p-3.5 ${st.glow}`}
-                    variants={{ hidden: { opacity: 0, y: 14, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1 } }}
-                    transition={{ type: "spring", stiffness: 260, damping: 24 }}
-                    whileHover={{ y: -3 }}
-                  >
-                    <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${st.bar}`} />
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-[17px] font-semibold tracking-tight text-ink">{c.bank}</p>
-                        <p className="mono text-[10.5px] text-muted">policy v{c.policyVersion}</p>
-                      </div>
-                      <motion.span
-                        className={`chip px-2 py-1 text-[11.5px] font-semibold uppercase tracking-wide ${st.chip}`}
-                        initial={{ scale: 0.6, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 18, delay: 0.25 }}
-                      >
-                        {st.word}
-                      </motion.span>
-                    </div>
-                    {c.offer?.limit !== undefined && (
-                      <p className="mt-2 text-[12px] text-ink-soft">
-                        {label(c.offer.kind)} up to <span className="mono font-semibold text-ink">${c.offer.limit.toLocaleString("en-CA")}</span>
-                      </p>
-                    )}
-                    <div className="mt-3 flex items-center gap-2">
-                      <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/8">
-                        <motion.div
-                          className={`h-full rounded-full bg-gradient-to-r ${st.bar}`}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(passed / Math.max(c.checks.length, 1)) * 100}%` }}
-                          transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-                        />
-                      </div>
-                      <span className="mono text-[10.5px] text-muted">
-                        {passed}/{c.checks.length} rules
-                      </span>
-                    </div>
-                    <ul className="mt-2.5 space-y-1 text-[11.5px] leading-snug">
-                      {c.checks.map((k, i) => (
-                        <li key={i} className="flex gap-1.5">
-                          <span className={`mt-px shrink-0 ${k.outcome === "fail" ? "text-danger" : k.outcome === "unknown" ? "text-warn" : "text-accent"}`}>
-                            {OUTCOME_MARK[k.outcome]}
-                          </span>
-                          <span className="min-w-0">
-                            <span className={k.outcome === "pass" ? "text-ink-soft" : "font-medium text-ink"}>{k.rule}</span>
-                            <span className="block text-muted">{k.detail}</span>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    {c.pivotalFacts.length > 0 && (
-                      <div className="mt-3 border-t border-line pt-2.5">
-                        <p className="label mb-1.5 text-[10px]">Pivotal memories</p>
-                        <ul className="space-y-1">
-                          {c.pivotalFacts.map((p) => (
-                            <li key={p.factKey} className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                              {p.memoryId && <MemoryRef id={p.memoryId} version={versionOf(p.memoryId)} onClick={() => onOpenMemory?.(p.memoryId!)} />}
-                              <span className="text-muted">
-                                {label(p.factKey)} → <span className="text-ink-soft">{p.decisionWithout}</span> without it
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </motion.div>
-                );
-              })}
-          </motion.div>
+      {checks.map((c) => (
+        <div key={c.policyId} className="rounded-lg border border-line p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-medium text-ink">{c.bank}</span>
+            <span className="text-[12px] text-muted">{label(c.product)} · policy v{c.policyVersion}</span>
+            <span className={`chip uppercase ${DECISION_STYLE[c.decision]}`}>{c.decision}</span>
+            {c.offer?.limit !== undefined && (
+              <span className="text-[12px] text-ink-soft">
+                {c.offer.kind} up to ${c.offer.limit.toLocaleString("en-CA")}
+              </span>
+            )}
+          </div>
+          <ul className="mt-2 space-y-0.5 text-[12px] text-ink-soft">
+            {c.checks.map((k, i) => (
+              <li key={i}>
+                <span className={k.outcome === "fail" ? "text-danger" : k.outcome === "unknown" ? "text-warn" : "text-accent"}>
+                  {OUTCOME_MARK[k.outcome]}
+                </span>{" "}
+                {k.rule}: <span className="text-muted">{k.detail}</span>
+              </li>
+            ))}
+          </ul>
+          {c.pivotalFacts.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12px]">
+              <span className="label">Pivotal</span>
+              {c.pivotalFacts.map((p) => (
+                <span key={p.factKey} className="flex items-center gap-1">
+                  {p.memoryId && <MemoryRef id={p.memoryId} version={versionOf(p.memoryId)} onClick={() => onOpenMemory?.(p.memoryId!)} />}
+                  <span className="text-muted">
+                    {label(p.factKey)} → {p.decisionWithout} without it
+                  </span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       ))}
     </div>
@@ -503,7 +425,7 @@ export function TraceView({ run, onOpenMemory }: { run: RunDTO; onOpenMemory?: (
               <span className="mono">{r.returned}</span>, dropped by the in-code re-check <span className="mono">{r.droppedAfterRecheck}</span>
             </p>
             {stage && (
-              <pre className="mono mt-1.5 max-h-72 overflow-auto rounded-lg bg-black/50 ring-1 ring-line p-3 text-[11.5px] leading-relaxed text-ink-soft">{stage}</pre>
+              <pre className="mono mt-1.5 max-h-72 overflow-auto rounded-lg border border-line bg-black/40 p-3 text-[11.5px] leading-relaxed text-ink-soft">{stage}</pre>
             )}
             <p className="mt-1 text-[11px] text-muted">
               The filter is built on the server from the signed-in user. It runs inside the vector search, so memories of other clients,

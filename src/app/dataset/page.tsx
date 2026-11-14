@@ -105,7 +105,7 @@ export default function DatasetPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-[32px] leading-tight">Dataset</h1>
+        <h1 className="font-serif text-[32px] leading-tight tracking-tight">Dataset</h1>
         <p className="text-sm text-muted">
           Every stored document for {client?.name ?? "this client"}. A document is evidence, not memory: the agent only uses facts an
           advisor has confirmed from it.
@@ -157,7 +157,7 @@ export default function DatasetPage() {
                       <button
                         type="button"
                         onClick={() => setOpenId(r._id)}
-                        className={`w-full px-3 py-2 text-left hover:bg-white/5 ${openId === r._id ? "bg-canvas" : ""}`}
+                        className={`w-full px-3 py-2 text-left hover:bg-canvas ${openId === r._id ? "bg-canvas" : ""}`}
                       >
                         <div className="flex items-baseline justify-between gap-2">
                           <span className="truncate text-[13px] font-medium text-ink">{r.title}</span>
