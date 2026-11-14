@@ -30,7 +30,7 @@ export default function ComparePage() {
 
   useEffect(() => {
     setData(null);
-    setRequest(clientId ? (DEFAULT_REQUEST[clientId] ?? "") : "");
+    setRequest(clientId ? (DEFAULT_REQUEST[clientId] ?? "Prepare the quarterly review and create the appropriate follow-ups.") : "");
   }, [clientId]);
 
   const go = async () => {
@@ -51,7 +51,7 @@ export default function ComparePage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Memory influence comparison</h1>
+        <h1 className="text-[32px] leading-tight">Memory influence comparison</h1>
         <p className="text-sm text-muted">
           Same request, same (empty) set of open tasks, three memory conditions. Dry runs: nothing is saved.
         </p>

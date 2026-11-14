@@ -71,4 +71,8 @@ export const DEFAULT_REQUEST: Record<string, string> = {
   cli_sarah: "Prepare Sarah's quarterly review and create the appropriate follow-ups.",
   cli_daniel: "Prepare Daniel's quarterly review and create the appropriate follow-ups.",
   cli_sara_hr: "Prepare Sara's quarterly review and create the appropriate follow-ups.",
+  cli_c1_maya: "Compare mortgage and line of credit options at RBC, TD and CIBC.",
+  cli_c2_jonathan: "Compare mortgage and line of credit options at RBC, TD and CIBC.",
+  cli_c3_priya: "Prepare mortgage and business card options at RBC, TD and CIBC.",
+  cli_c4_retail_treasury: "Prepare the quarterly review and create the appropriate follow-ups.",
 };

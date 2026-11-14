@@ -62,7 +62,7 @@ func (s *Server) tool(name string, fn toolFn) http.HandlerFunc {
 		}
 		uid, err := verifyToken(s.cfg.TokenSecret, r.Header.Get("X-Session-Token"), s.clock())
 		if err != nil {
-			writeJSON(w, 401, map[string]string{"error": "Session expired or invalid. Ask the advisor to restart the voice session from Continuity."})
+			writeJSON(w, 401, map[string]string{"error": "Session expired or invalid. Ask the advisor to restart the voice session from Recall.IQ."})
 			return
 		}
 		ctx, cancel := context.WithTimeout(r.Context(), 110*time.Second)
@@ -272,7 +272,7 @@ func (s *Server) voyageEmbed(ctx context.Context, text string) ([]float64, error
 // ---------- prepare_follow_ups ----------
 
 // prepareFollowUps runs the full governed agent (retrieval, lender-policy engine, planner, validation)
-// in the Continuity app, as this user, and returns a voice-sized summary.
+// in the Recall.IQ app, as this user, and returns a voice-sized summary.
 func (s *Server) prepareFollowUps(ctx context.Context, u *User, body map[string]any) (any, string, error) {
 	clientID := str(body, "client_id")
 	request := str(body, "request")

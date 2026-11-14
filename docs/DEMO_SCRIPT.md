@@ -2,7 +2,7 @@
 
 Start from a reset (header badge → **Reset demo data**), signed in as **Maya Patel, Lead advisor** at Northlight. Client: **Sarah Chen**.
 
-**0:00 · Set the scene (15s).** "Maya advises Sarah. Context about Sarah is scattered across meetings. Continuity turns it into memories that Maya controls, and an agent that acts on them." Point at the badge: say which services are live and which are demo.
+**0:00 · Set the scene (15s).** "Maya advises Sarah. Context about Sarah is scattered across meetings. Recall.IQ turns it into memories that Maya controls, and an agent that acts on them." Point at the badge: say which services are live and which are demo.
 
 **0:15 · Ingest and confirm (40s).** Memory → **1 · May meeting note** → *Extract proposed memories*. Four separate proposals appear: possible family support, why the proposal was declined, the revisit condition, and Maya's commitment. Each one quotes the exact sentence and is labeled *Source-supported · unconfirmed*. Confirm all four.
 

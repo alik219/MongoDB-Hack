@@ -39,7 +39,7 @@ Every project **must** fit one of these three tracks.
 
 ## 💡 Our project
 
-- **Name:** Continuity
+- **Name:** Recall.IQ
 - **Track:** 2. Memory You Can Govern
 - **One-liner:** An advisor's agent whose client memory is governed: who can read it, how long it lives, how it is corrected or forgotten, and proof that it changed the next decision.
 - **How it uses MongoDB Atlas / Vector Search:** memories are versioned documents; retrieval is `$vectorSearch` with a firm/client/status/expiry/access pre-filter (Atlas auto-embedding or Voyage via the MongoDB Model API); lender policies, audit events, tombstones and runs live in Atlas.
@@ -50,7 +50,7 @@ Every project **must** fit one of these three tracks.
 - **Backend:** Next.js API routes (TypeScript) + Go tool service (`agent-tools/`)
 - **Frontend:** Next.js + Tailwind
 
-Setup: [docs/SETUP.md](docs/SETUP.md). Design: [docs/CONTINUITY.md](docs/CONTINUITY.md).
+Setup: [docs/SETUP.md](docs/SETUP.md). Design: [docs/RECALL_IQ.md](docs/RECALL_IQ.md).
 
 ### Running it locally
 ```bash

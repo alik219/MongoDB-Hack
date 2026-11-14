@@ -18,8 +18,8 @@ interface Event {
 const TONE: Record<string, string> = {
   memory: "bg-accent",
   task: "bg-info",
-  run: "bg-ink",
-  source: "bg-slate-400",
+  run: "bg-accent",
+  source: "bg-white/30",
 };
 
 export default function ActivityPage() {
@@ -46,7 +46,7 @@ export default function ActivityPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Activity</h1>
+          <h1 className="text-[32px] leading-tight">Activity</h1>
           <p className="text-sm text-muted">Minimal audit trail: who changed memory, tasks and runs, and when. Content is not copied here.</p>
         </div>
         <select className="input w-auto" value={clientFilter} onChange={(e) => setClientFilter(e.target.value)}>
@@ -70,7 +70,7 @@ export default function ActivityPage() {
         <ol className="card divide-y divide-line">
           {events.map((e) => (
             <li key={e._id} className="flex flex-wrap items-start gap-3 px-4 py-2.5 text-[13px]">
-              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${TONE[e.type.split(".")[0]] ?? "bg-slate-300"}`} />
+              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${TONE[e.type.split(".")[0]] ?? "bg-white/20"}`} />
               <span className="w-32 shrink-0 text-muted">{fmtDateTime(e.at)}</span>
               <span className="min-w-0 flex-1">
                 <span className="font-medium text-ink">{label(e.type.replace(".", " "))}</span>{" "}
