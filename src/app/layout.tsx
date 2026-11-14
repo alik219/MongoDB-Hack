@@ -7,7 +7,7 @@ import { SessionProvider } from "@/components/session";
 import { Shell } from "@/components/shell";
 
 export const metadata: Metadata = {
-  title: "Continuity",
+  title: "Recall.IQ",
   description: "Advisor agent workspace with governed client memory",
 };
 

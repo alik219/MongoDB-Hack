@@ -1,6 +1,6 @@
 # agent-tools (Go)
 
-The Go tool service behind Continuity's ElevenLabs voice agent. The voice agent talks and reasons
+The Go tool service behind Recall.IQ's ElevenLabs voice agent. The voice agent talks and reasons
 (choose an OpenAI model for its LLM in ElevenLabs); whenever it needs client memory it calls these
 webhook tools, which read and write MongoDB Atlas.
 
@@ -14,7 +14,7 @@ Advisor ── voice ──► ElevenLabs agent (LLM: OpenAI)
                           │                 sources / memories   → voice notes saved as *proposed* memories
                           │                 audit_events         → every tool call
                           ▼
-                    Continuity (Next.js) /api/internal/agent/run → governed run: lender policy engine,
+                    Recall.IQ (Next.js) /api/internal/agent/run → governed run: lender policy engine,
                                                                     OpenAI planner, validation, tasks
 ```
 

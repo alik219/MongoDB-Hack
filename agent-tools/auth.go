@@ -17,7 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-// Identity comes only from a token the Continuity app signed for the logged-in user.
+// Identity comes only from a token the Recall.IQ app signed for the logged-in user.
 // Format (shared with src/lib/voice-token.ts): base64url(json{uid,exp}) + "." + hex(hmac_sha256(secret, payload)).
 
 type tokenClaims struct {

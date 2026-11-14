@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       })),
       changes: run.appliedActions.map((a) => ({ type: a.type, title: a.title })),
       errors: run.errors.slice(0, 3),
-      note: "Drafts only. The advisor reviews and approves in Continuity; nothing was sent to a lender.",
+      note: "Drafts only. The advisor reviews and approves in Recall.IQ; nothing was sent to a lender.",
     });
   } catch (err) {
     const status = err instanceof AppError ? err.status : 500;

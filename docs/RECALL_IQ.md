@@ -1,6 +1,6 @@
-# Continuity
+# Recall.IQ
 
-An advisor's agent workspace with a governed memory dashboard. Continuity helps a financial advisor follow through on client commitments across conversations, while controlling exactly what the agent remembers, who can read each memory, how long it lives, and how it is corrected or forgotten.
+An advisor's agent workspace with a governed memory dashboard. Recall.IQ helps a financial advisor follow through on client commitments across conversations, while controlling exactly what the agent remembers, who can read each memory, how long it lives, and how it is corrected or forgotten.
 
 ```
 client note → proposed memories → advisor confirmation → fresh agent run

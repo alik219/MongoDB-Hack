@@ -20,7 +20,7 @@ export async function api<T>(path: string, opts: { method?: string; body?: unkno
       cache: "no-store",
     });
   } catch {
-    throw new ApiError(0, "network", "Cannot reach the Continuity server.");
+    throw new ApiError(0, "network", "Cannot reach the Recall.IQ server.");
   }
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new ApiError(res.status, json.code ?? "error", json.error ?? `Request failed (${res.status})`);

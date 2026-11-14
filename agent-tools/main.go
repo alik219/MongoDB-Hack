@@ -1,8 +1,8 @@
-// Command agent-tools is the Go tool service behind the Continuity voice agent.
+// Command agent-tools is the Go tool service behind the Recall.IQ voice agent.
 //
 // An ElevenLabs Conversational AI agent handles speech and reasoning (its LLM can be an
 // OpenAI model). Whenever it needs client memory it calls these webhook tools. Every tool:
-//   - derives identity from a signed session token minted by the Continuity app (never from the LLM),
+//   - derives identity from a signed session token minted by the Recall.IQ app (never from the LLM),
 //   - authorizes the client against the users/clients collections in MongoDB Atlas,
 //   - applies the same firm/client/status/expiry/access pre-filter inside $vectorSearch,
 //   - writes an audit event.

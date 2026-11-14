@@ -90,25 +90,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
           className="flex items-center gap-2.5 px-5 pb-3 pt-5"
         >
           <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden>
-            <circle
-              cx="12"
-              cy="12"
-              r="10.250"
-              fill="none"
-              stroke="#00ed64"
-              strokeWidth="1.500"
-            />
-            <path
-              d="M15.500 8.600a4.800 4.800 0 1 0 0 6.800"
-              fill="none"
-              stroke="#00ed64"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <circle cx="16.200" cy="12" r="1.300" fill="#00ed64" />
+            <path d="M12 3.500a8.500 8.500 0 1 0 8.500 8.500" fill="none" stroke="#00ed64" strokeWidth="1.800" strokeLinecap="round" />
+            <path d="M12 3.500l2.800-2.200M12 3.500l2.600 2.400" fill="none" stroke="#00ed64" strokeWidth="1.800" strokeLinecap="round" />
+            <circle cx="12" cy="12" r="2.600" fill="#00ed64" />
           </svg>
           <span className="font-serif text-[24px] leading-none text-accent">
-            Continuity
+            Recall<span className="text-ink-soft">.IQ</span>
           </span>
         </Link>
         <nav className="flex gap-6 overflow-x-auto px-3 pb-3 lg:block lg:overflow-visible lg:px-0 lg:pb-0 lg:pt-3">
