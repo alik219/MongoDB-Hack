@@ -80,7 +80,8 @@ describe("governed memory changes the lender outcome", () => {
     const fact = (await store.memories.find({ clientId: PRIYA, status: "active", "structured.topic": "move_up_mortgage_request" }))[0];
     await correctMemory(await tomas(), fact._id, {
       statement: "Move-up home stressed TDS is 54.1% once guaranteed business payments are counted.",
-      attributes: { mortgage_down_payment_pct: 0.361, mortgage_stressed_gds: 0.344, mortgage_stressed_tds: 0.541 },
+      // Sent as text, as a form would: the service must keep these numeric for the lender engine.
+      attributes: { mortgage_down_payment_pct: "0.361", mortgage_stressed_gds: "0.344", mortgage_stressed_tds: "0.541" },
       reason: "Lenders count the personal guarantee",
     });
     const after = await runAgent(await tomas(), PRIYA, "Prepare mortgage options for Priya's move-up home.");
@@ -178,5 +179,17 @@ describe("chat", () => {
     const { run } = await runAgent(await tomas(), PRIYA, "Prepare the review");
     expect(run.status).not.toBe("failed");
     expect(run.trace?.retrieval?.engine).toMatch(/structured fallback/);
+  });
+});
+
+describe("provider errors", () => {
+  it("explains an exhausted OpenAI balance in plain words, without raw JSON", async () => {
+    const { openaiErrorMessage } = await import("@/lib/ai/llm");
+    const msg = openaiErrorMessage(
+      429,
+      JSON.stringify({ error: { message: "You have no credits remaining.", type: "insufficient_quota", code: "credit_balance_exhausted" } }),
+    );
+    expect(msg).toMatch(/no credits left/);
+    expect(msg).not.toMatch(/[{}]/);
   });
 });
