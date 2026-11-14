@@ -4,7 +4,7 @@ import { evaluatePolicy, parseCondition, type Facts } from "@/lib/lender/engine"
 import { loadLenderPolicies } from "@/lib/hackathon";
 import type { Store } from "@/lib/store/types";
 import { getRun, runAgent } from "@/lib/services/agent";
-import { correctMemory, forgetMemory } from "@/lib/services/memories";
+import { correctMemory, extractFromSource, forgetMemory, listSources } from "@/lib/services/memories";
 import { freshStore } from "./helpers";
 
 let store: Store;
@@ -100,5 +100,58 @@ describe("governed memory changes the lender outcome", () => {
   it("with persistent memory off, no facts reach the engine", async () => {
     const run = await runAgent(await tomas(), PRIYA, "Prepare mortgage options.", { memoryMode: "none", persist: false });
     expect(run.run.lenderChecks).toEqual([]);
+  });
+});
+
+describe("technical trace and dataset documents", () => {
+  it("records the retrieval query with the server-built access filter, and the policy versions evaluated", async () => {
+    const tomas = await contextForUser("usr_tomas");
+    const { run } = await runAgent(tomas, "cli_c3_priya", "Prepare mortgage options");
+    const r = run.trace!.retrieval!;
+    const filter = JSON.stringify(JSON.parse(r.filterJson));
+    expect(filter).toContain('"firmId":"frm_lakeshore"');
+    expect(filter).toContain('"clientId":"cli_c3_priya"');
+    expect(filter).toContain("usr_tomas");
+    expect(r.returned - r.droppedAfterRecheck).toBeLessThanOrEqual(run.retrieved.length);
+    expect(run.trace!.policies.map((p) => p.bank).sort()).toEqual(["CIBC", "RBC", "TD"]);
+    expect(run.trace!.policies.every((p) => p.contentHash.length >= 12)).toBe(true);
+    expect(run.trace!.planner.lenderChecksSent).toBe(3);
+  });
+
+  it("lists a client's stored documents without text, and only to an assigned advisor", async () => {
+    const tomas = await contextForUser("usr_tomas");
+    const rows = await listSources(tomas, "cli_c3_priya");
+    expect(rows.filter((r) => r.kind === "meeting_note").length).toBe(20);
+    expect(rows.some((r) => r.kind === "client_profile")).toBe(true);
+    expect(rows.every((r) => !("text" in r))).toBe(true);
+    const daniel = await contextForUser("usr_daniel");
+    await expect(listSources(daniel, "cli_c3_priya")).rejects.toMatchObject({ status: 403 });
+  });
+
+  it("extracting from a stored note only creates proposals, which the next run ignores", async () => {
+    const tomas = await contextForUser("usr_tomas");
+    const note = (await listSources(tomas, "cli_c3_priya")).find((r) => r.kind === "meeting_note")!;
+    const before = await runAgent(tomas, "cli_c3_priya", "Prepare mortgage options", { persist: false });
+    const res = await extractFromSource(tomas, note._id);
+    expect(res.sourceId).toBe(note._id);
+    expect(res.proposals.every((p) => p.status === "proposed")).toBe(true);
+    const after = await runAgent(tomas, "cli_c3_priya", "Prepare mortgage options", { persist: false });
+    expect(after.run.lenderChecks!.map((c) => c.decision)).toEqual(before.run.lenderChecks!.map((c) => c.decision));
+    const daniel = await contextForUser("usr_daniel");
+    await expect(extractFromSource(daniel, note._id)).rejects.toMatchObject({ status: 403 });
+  });
+});
+
+describe("offline extraction from a dataset note", () => {
+  it("turns the note's bullets into proposals that quote the note verbatim", async () => {
+    const tomas = await contextForUser("usr_tomas");
+    const note = (await listSources(tomas, "cli_c3_priya")).find((r) => r._id === "src_c3_20261103")!;
+    const res = await extractFromSource(tomas, note._id);
+    expect(res.proposals.length).toBeGreaterThan(3);
+    const src = (await store.sources.findOne({ _id: note._id }))!;
+    for (const p of res.proposals) expect(src.text).toContain(p.evidence[0].excerpt);
+    expect(res.proposals.some((p) => p.category === "goal" && /Sale of the business/.test(p.statement))).toBe(true);
+    const again = await extractFromSource(tomas, note._id);
+    expect(again.proposals.length).toBe(0);
   });
 });

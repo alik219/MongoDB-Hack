@@ -8,7 +8,9 @@ import type { Client, User } from "./types";
  * never from anything the browser sends. This is not production authentication.
  */
 export const PERSONA_COOKIE = "continuity_persona";
-export const DEFAULT_PERSONA = "usr_maya";
+/** Opens on the hackathon firm (Tomás Reyes, Priya's advisor); falls back to the sample firm if that data is not seeded. */
+export const DEFAULT_PERSONA = process.env.DEFAULT_PERSONA ?? "usr_tomas";
+const FALLBACK_PERSONA = "usr_maya";
 
 export interface AuthContext {
   user: User;
@@ -45,7 +47,11 @@ export async function getAuthContext(): Promise<AuthContext> {
   try {
     return await contextForUser(id);
   } catch {
-    return contextForUser(DEFAULT_PERSONA);
+    try {
+      return await contextForUser(DEFAULT_PERSONA);
+    } catch {
+      return contextForUser(FALLBACK_PERSONA);
+    }
   }
 }
 

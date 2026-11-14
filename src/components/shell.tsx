@@ -11,6 +11,7 @@ const NAV = [
   { href: "/workspace", label: "Workspace" },
   { href: "/clients", label: "Clients" },
   { href: "/memory", label: "Memory" },
+  { href: "/dataset", label: "Dataset" },
   { href: "/activity", label: "Activity" },
   { href: "/compare", label: "Compare" },
 ];

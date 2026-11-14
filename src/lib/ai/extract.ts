@@ -245,7 +245,40 @@ export function demoExtract(input: ExtractionInput): ExtractionOutput {
       }
     }
   }
+  if (!out.length) out.push(...structuredNoteExtract(input, first, ignored));
   return { memories: out, ignoredInstructions: ignored };
+}
+
+/** Section headings of the dataset's meeting notes that hold reviewable statements, and how to file them. */
+const NOTE_SECTIONS: { heading: RegExp; category: ExtractedMemory["category"]; lead: (first: string) => string }[] = [
+  { heading: /personal and life update/i, category: "life_event", lead: (f) => `${f}: ` },
+  { heading: /needs and goals/i, category: "goal", lead: (f) => `${f}'s goal: ` },
+  { heading: /^discussion/i, category: "previous_decision", lead: () => "Recorded outcome: " },
+];
+
+/**
+ * Rule-based fallback for the dataset's structured meeting notes (numbered "## n. Section" headings
+ * with bullets). Each bullet becomes one proposal quoting the bullet verbatim. No model is involved.
+ */
+function structuredNoteExtract(input: ExtractionInput, first: string, ignored: string[]): ExtractedMemory[] {
+  const out: ExtractedMemory[] = [];
+  let section: (typeof NOTE_SECTIONS)[number] | undefined;
+  for (const line of input.text.split("\n")) {
+    const h = /^##\s+(?:\d+\.\s*)?(.+)$/.exec(line.trim());
+    if (h) {
+      section = NOTE_SECTIONS.find((s) => s.heading.test(h[1]));
+      continue;
+    }
+    const b = /^- (.{8,300})$/.exec(line.trim());
+    if (!section || !b || ignored.some((i) => i.includes(b[1]))) continue;
+    const excerpt = b[1].trim();
+    const statement = `${section.lead(first)}${excerpt}`.slice(0, 400);
+    const topic = excerpt.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").split("_").slice(0, 5).join("_").slice(0, 64);
+    if (topic.length < 2 || input.existing.some((x) => x.statement === statement)) continue;
+    out.push({ category: section.category, topic, statement, attributes: [], excerpt, relation: "new", targetMemoryId: null, changeSummary: null });
+    if (out.length >= 12) break;
+  }
+  return out;
 }
 
 // ---------------- LIVE extractor: Anthropic structured outputs ----------------

@@ -268,10 +268,32 @@ export interface Run {
   rejectedActions: RejectedAction[];
   /** Lender policy decisions computed in code from authorized financial_fact memories. */
   lenderChecks?: LenderCheck[];
+  /** How the run was computed: the exact retrieval query and the policy documents evaluated. No memory text. */
+  trace?: RunTrace;
   errors: string[];
   staleReason?: string;
   createdAt: string;
   durationMs: number;
+}
+
+export interface RunTrace {
+  retrieval: {
+    engine: string;
+    index: string | null;
+    path: string | null;
+    queryMode: "auto_embed_text" | "query_vector" | "version_history";
+    queryText: string;
+    embeddingModel: string;
+    numCandidates: number;
+    limit: number;
+    /** The authorization pre-filter, serialized. Built from the session, never from the request. */
+    filterJson: string;
+    returned: number;
+    droppedAfterRecheck: number;
+  } | null;
+  policies: { policyId: string; bank: string; product: string; version: string; effectiveDate: string; contentHash: string; sourceFile: string }[];
+  factsLoaded: number;
+  planner: { provider: string; model: string; memoriesSent: number; lenderChecksSent: number; openTasksSent: number };
 }
 
 export interface AuditEvent {

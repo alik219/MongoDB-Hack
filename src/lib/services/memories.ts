@@ -3,11 +3,12 @@ import { extractMemories, detectInstructionLikeText } from "../ai/extract";
 import { buildMemory, embeddingFields, parseAttrs } from "../memory-doc";
 import { canSeeMemory, effectiveStatus } from "../policy";
 import { getStore } from "../store";
-import type { Filter } from "../store/types";
+import type { Filter, Store } from "../store/types";
 import {
   MEMORY_CATEGORIES,
   NO_EXPIRY_SENTINEL,
   type Attr,
+  type Client,
   type Memory,
   type MemoryCategory,
   type MemoryStatus,
@@ -202,7 +203,56 @@ export async function ingestNote(
     safetyFlags: detectInstructionLikeText(text),
   };
   await store.sources.insertOne(src);
+  return proposeFromSource(store, ctx, client, src);
+}
 
+/**
+ * Re-reads a document that is already stored (for example one of the dataset's meeting notes)
+ * and proposes memories from it. Same guards as a new note: verbatim evidence, tombstones,
+ * duplicates. Everything it finds is a proposal until an advisor confirms it.
+ */
+export async function extractFromSource(ctx: AuthContext, sourceId: string): Promise<IngestResult> {
+  const store = await getStore();
+  const src = await store.sources.findOne({ _id: sourceId, firmId: ctx.firmId });
+  if (!src) throw notFound("Source not found");
+  const client = await authorizeClient(ctx, src.clientId);
+  const backing = await store.memories.find({ firmId: ctx.firmId, clientId: src.clientId, "evidence.sourceId": src._id });
+  if (backing.length && backing.every((b) => !canSeeMemory(b, ctx))) throw denied("This source supports a restricted memory.");
+  return proposeFromSource(store, ctx, client, src);
+}
+
+/** Every stored document for a client, with how many memories each one supports. Text is not returned here. */
+export async function listSources(ctx: AuthContext, clientId: string) {
+  const store = await getStore();
+  const client = await authorizeClient(ctx, clientId);
+  const [sources, mems] = await Promise.all([
+    store.sources.find({ firmId: ctx.firmId, clientId: client._id }, { sort: { sourceDate: -1 } }),
+    store.memories.find({ firmId: ctx.firmId, clientId: client._id }),
+  ]);
+  const now = clock.now();
+  return sources
+    .map((s) => {
+      const backing = mems.filter((m) => m.evidence.some((e) => e.sourceId === s._id));
+      const visible = backing.filter((m) => canSeeMemory(m, ctx));
+      if (backing.length && !visible.length) return null; // supports only restricted memories
+      const by = (status: string) => visible.filter((m) => effectiveStatus(m, now) === status).length;
+      return {
+        _id: s._id,
+        title: s.title,
+        kind: s.kind,
+        sourceDate: s.sourceDate,
+        chars: s.text.length,
+        contentHash: s.contentHash.slice(0, 12),
+        safetyFlags: s.safetyFlags.length,
+        memories: { active: by("active"), proposed: by("proposed"), other: visible.length - by("active") - by("proposed") },
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+}
+
+async function proposeFromSource(store: Store, ctx: AuthContext, client: Client, src: Source): Promise<IngestResult> {
+  const text = src.text;
+  const at = nowIso();
   const existing = (await store.memories.find({ firmId: ctx.firmId, clientId: client._id, status: "active" })).filter(
     (m) => canSeeMemory(m, ctx) && effectiveStatus(m, clock.now()) === "active",
   );

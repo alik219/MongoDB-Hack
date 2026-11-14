@@ -50,6 +50,24 @@ export interface RunDTO {
     factsUsed: { key: string; value: number; memoryId?: string; version?: number }[];
     pivotalFacts: { factKey: string; memoryId?: string; statement?: string; decisionWithout: string }[];
   }[];
+  trace?: {
+    retrieval: {
+      engine: string;
+      index: string | null;
+      path: string | null;
+      queryMode: string;
+      queryText: string;
+      embeddingModel: string;
+      numCandidates: number;
+      limit: number;
+      filterJson: string;
+      returned: number;
+      droppedAfterRecheck: number;
+    } | null;
+    policies: { policyId: string; bank: string; product: string; version: string; effectiveDate: string; contentHash: string; sourceFile: string }[];
+    factsLoaded: number;
+    planner: { provider: string; model: string; memoriesSent: number; lenderChecksSent: number; openTasksSent: number };
+  };
   errors: string[];
   staleReason?: string;
   createdAt: string;
@@ -350,6 +368,161 @@ export function LenderChecksView({ run, onOpenMemory }: { run: RunDTO; onOpenMem
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+const fmtFact = (v: number) =>
+  !Number.isFinite(v) ? "none" : Math.abs(v) < 1 && v !== 0 ? v.toFixed(3) : v.toLocaleString("en-CA", { maximumFractionDigits: 2 });
+
+/** How this run was computed: the retrieval query as sent, the facts fed to the rule engine, and what the model received. */
+export function TraceView({ run, onOpenMemory }: { run: RunDTO; onOpenMemory?: (id: string) => void }) {
+  const t = run.trace;
+  if (!t) return <p className="text-sm text-muted">This run was recorded before tracing was added. Start a new run to see it.</p>;
+  const r = t.retrieval;
+  let stage: string | null = null;
+  if (r && r.queryMode !== "version_history") {
+    let filter: unknown = r.filterJson;
+    try {
+      filter = JSON.parse(r.filterJson);
+    } catch {}
+    stage = JSON.stringify(
+      {
+        $vectorSearch: {
+          ...(r.index ? { index: r.index, path: r.path } : {}),
+          ...(r.queryMode === "auto_embed_text" ? { query: { text: r.queryText } } : { queryVector: `<${r.embeddingModel} embedding of "${r.queryText}">` }),
+          numCandidates: r.numCandidates,
+          limit: r.limit,
+          filter,
+        },
+      },
+      null,
+      2,
+    );
+  }
+  const facts = new Map<string, { key: string; value: number; memoryId?: string; version?: number; usedBy: string[] }>();
+  for (const c of run.lenderChecks ?? []) {
+    for (const f of c.factsUsed) {
+      const row = facts.get(f.key) ?? { ...f, usedBy: [] };
+      row.usedBy.push(`${c.bank} ${label(c.product)}`);
+      facts.set(f.key, row);
+    }
+  }
+  const pivotal = (key: string) =>
+    (run.lenderChecks ?? [])
+      .filter((c) => c.pivotalFacts.some((p) => p.factKey === key))
+      .map((c) => `${c.bank} ${c.product === "mortgage" ? "mortgage" : c.product === "business_credit_card" ? "card" : "line of credit"}`);
+  return (
+    <div className="space-y-4 text-[12.5px]">
+      <div>
+        <p className="label mb-1">1 · Retrieval</p>
+        {!r ? (
+          <p className="text-muted">Memory was disabled for this run, so nothing was retrieved.</p>
+        ) : (
+          <>
+            <p className="text-ink-soft">
+              {r.engine} · embedding model <span className="mono">{r.embeddingModel}</span> · returned{" "}
+              <span className="mono">{r.returned}</span>, dropped by the in-code re-check <span className="mono">{r.droppedAfterRecheck}</span>
+            </p>
+            {stage && (
+              <pre className="mono mt-1.5 max-h-72 overflow-auto rounded-lg bg-slate-900 p-3 text-[11.5px] leading-relaxed text-slate-100">{stage}</pre>
+            )}
+            <p className="mt-1 text-[11px] text-muted">
+              The filter is built on the server from the signed-in user. It runs inside the vector search, so memories of other clients,
+              other firms, expired or restricted memories are never candidates.
+            </p>
+          </>
+        )}
+      </div>
+
+      {run.retrieved.length > 0 && (
+        <div>
+          <p className="label mb-1">2 · Ranked memories ({run.retrieved.length})</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="text-[11px] text-muted">
+                <tr>
+                  <th className="py-1 pr-3 font-medium">Memory</th>
+                  <th className="py-1 pr-3 font-medium">Category</th>
+                  <th className="py-1 pr-3 font-medium">Score</th>
+                  <th className="py-1 pr-3 font-medium">Freshness</th>
+                  <th className="py-1 font-medium">How it got in</th>
+                </tr>
+              </thead>
+              <tbody>
+                {run.retrieved.map((m) => (
+                  <tr key={m.memoryId} className="border-t border-line">
+                    <td className="py-1 pr-3">
+                      <MemoryRef id={m.memoryId} version={m.version} onClick={() => onOpenMemory?.(m.memoryId)} />
+                    </td>
+                    <td className="py-1 pr-3 text-ink-soft">{label(m.category)}</td>
+                    <td className="mono py-1 pr-3">{m.similarity > 0 ? m.similarity.toFixed(4) : "n/a"}</td>
+                    <td className="py-1 pr-3 text-ink-soft">{label(m.freshness)}</td>
+                    <td className="py-1 text-muted">{m.similarity > 0 ? "vector search" : "structured lookup (financial fact)"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {facts.size > 0 && (
+        <div>
+          <p className="label mb-1">
+            3 · Facts fed to the rule engine ({facts.size} of {t.factsLoaded} loaded)
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="text-[11px] text-muted">
+                <tr>
+                  <th className="py-1 pr-3 font-medium">Fact key</th>
+                  <th className="py-1 pr-3 font-medium">Value</th>
+                  <th className="py-1 pr-3 font-medium">From memory</th>
+                  <th className="py-1 pr-3 font-medium">Used by</th>
+                  <th className="py-1 font-medium">Flips a decision at</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...facts.values()].map((f) => (
+                  <tr key={f.key} className="border-t border-line align-top">
+                    <td className="mono py-1 pr-3">{f.key}</td>
+                    <td className="mono py-1 pr-3">{fmtFact(f.value)}</td>
+                    <td className="py-1 pr-3">
+                      {f.memoryId ? <MemoryRef id={f.memoryId} version={f.version ?? 1} onClick={() => onOpenMemory?.(f.memoryId!)} /> : "—"}
+                    </td>
+                    <td className="py-1 pr-3 text-muted">{f.usedBy.length} check(s)</td>
+                    <td className="py-1 text-ink-soft">{pivotal(f.key).join(", ") || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {t.policies.length > 0 && (
+        <div>
+          <p className="label mb-1">4 · Policy documents evaluated</p>
+          <ul className="space-y-0.5 text-ink-soft">
+            {t.policies.map((p) => (
+              <li key={p.policyId}>
+                <span className="mono">{p.policyId}</span> · v{p.version} · effective {p.effectiveDate} ·{" "}
+                <span className="mono text-muted">sha256 {p.contentHash.slice(0, 12)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div>
+        <p className="label mb-1">5 · What the model received</p>
+        <p className="text-ink-soft">
+          <span className="mono">{t.planner.provider}</span> / <span className="mono">{t.planner.model}</span> ·{" "}
+          {t.planner.memoriesSent} memories, {t.planner.lenderChecksSent} computed lender decisions, {t.planner.openTasksSent} open tasks.
+          It has no tools and no database access; its output was schema-checked and {run.rejectedActions.length} action(s) were rejected.
+        </p>
+      </div>
     </div>
   );
 }
