@@ -17,6 +17,7 @@ import {
   type RunDTO,
 } from "@/components/run-view";
 import { useSession } from "@/components/session";
+import { ChatPanel } from "@/components/chat-panel";
 import { VoiceAgent } from "@/components/voice-agent";
 import { TaskCard, type TaskDTO } from "@/components/task-card";
 import { Empty, ErrorState, RestrictedBadge, Section, Skeleton, Spinner, StatusPill } from "@/components/ui";
@@ -177,11 +178,11 @@ export default function WorkspacePage() {
 
       {/* Center: request, stages, brief */}
       <div className="min-w-0 space-y-4">
+        <ChatPanel clientId={client._id} clientName={client.name} onOpenMemory={setMemoryId} />
         <section className="card relative overflow-hidden p-5">
-          <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-accent/10 blur-3xl" />
-          <p className="label">Governed agent</p>
+          <p className="label">Meeting prep agent</p>
           <h2 className="mt-1 text-[22px] font-semibold leading-tight tracking-tight">
-            What should the agent prepare for <span className="text-gradient">{client.name.split(" ")[0]}</span>?
+            Prepare a brief and follow-ups for <span className="text-gradient">{client.name.split(" ")[0]}</span>
           </h2>
           <textarea
             id="req"

@@ -155,3 +155,28 @@ describe("offline extraction from a dataset note", () => {
     expect(again.proposals.length).toBe(0);
   });
 });
+
+describe("chat", () => {
+  it("answers from authorized memories only and rejects an unassigned advisor", async () => {
+    const { chat } = await import("@/lib/services/chat");
+    const reply = await chat(await tomas(), PRIYA, [{ role: "user", content: "What do we know about Priya's income?" }]);
+    expect(reply.retrieved).toBeGreaterThan(0);
+    expect(reply.citations.length).toBeGreaterThan(0);
+    const mems = await store.memories.find({ clientId: PRIYA });
+    for (const c of reply.citations) expect(mems.some((m) => m._id === c.memoryId)).toBe(true);
+    await expect(chat(await daniel(), PRIYA, [{ role: "user", content: "income?" }])).rejects.toMatchObject({ status: 403 });
+  });
+
+  it("falls back to structured retrieval when vector search is unavailable", async () => {
+    const { chat } = await import("@/lib/services/chat");
+    store.vectorSearchMemories = async () => {
+      throw new Error("Embedding provider rate limit exceeded, retry later");
+    };
+    const reply = await chat(await tomas(), PRIYA, [{ role: "user", content: "Summarise Priya" }]);
+    expect(reply.engine).toMatch(/structured fallback/);
+    expect(reply.retrieved).toBeGreaterThan(0);
+    const { run } = await runAgent(await tomas(), PRIYA, "Prepare the review");
+    expect(run.status).not.toBe("failed");
+    expect(run.trace?.retrieval?.engine).toMatch(/structured fallback/);
+  });
+});

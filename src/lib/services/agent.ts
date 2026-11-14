@@ -24,7 +24,7 @@ import {
   type TaskDependency,
 } from "../types";
 import { clock, newId, nowIso } from "../util";
-import { audit, canSeeTask, OPEN_TASK_STATUSES, taskVisibility } from "./common";
+import { audit, canSeeTask, OPEN_TASK_STATUSES, structuredMemoryFallback, taskVisibility } from "./common";
 
 export type MemoryMode = "persistent" | "none" | "original_snapshot";
 
@@ -176,6 +176,7 @@ export async function runAgent(
     // 3. Retrieve: Atlas Vector Search with the authorization pre-filter.
     const now = clock.now();
     let candidates: ScoredMemory[] = [];
+    let vectorFallback = false;
     const trace: RunTrace = {
       retrieval: null,
       policies: [],
@@ -211,14 +212,27 @@ export async function runAgent(
         );
       } else {
         const filter = retrievalFilter(ctx, clientId, now, cfg.embedding.id);
-        candidates = await store.vectorSearchMemories({
-          ...(auto ? { queryText } : { queryVector }),
-          filter,
-          limit: RETRIEVAL_LIMIT,
-          numCandidates: RETRIEVAL_LIMIT * 20,
-        });
+        let vectorError: string | null = null;
+        try {
+          candidates = await store.vectorSearchMemories({
+            ...(auto ? { queryText } : { queryVector }),
+            filter,
+            limit: RETRIEVAL_LIMIT,
+            numCandidates: RETRIEVAL_LIMIT * 20,
+          });
+        } catch (err) {
+          // Vector search can be briefly unavailable (embedding provider rate limit). Access rules still apply in code.
+          vectorError = (err as Error).message.slice(0, 200);
+          candidates = await structuredMemoryFallback(store, ctx, clientId, now, RETRIEVAL_LIMIT * 2);
+          vectorFallback = true;
+          run.errors.push(`Vector search unavailable, used structured retrieval instead: ${vectorError}`);
+        }
         trace.retrieval = {
-          engine: store.kind === "atlas" ? "Atlas $vectorSearch" : "demo cosine search (in-process)",
+          engine: vectorFallback
+            ? "structured fallback (vector search unavailable)"
+            : store.kind === "atlas"
+              ? "Atlas $vectorSearch"
+              : "demo cosine search (in-process)",
           index: store.kind === "atlas" ? (process.env.ATLAS_VECTOR_INDEX ?? "memory_vector_index") : null,
           path: store.kind === "atlas" ? (auto ? "embeddingText" : "embedding") : null,
           queryMode: auto ? "auto_embed_text" : "query_vector",
@@ -233,7 +247,7 @@ export async function runAgent(
         timer.done(
           "retrieve",
           "Retrieving memories",
-          `${candidates.length} candidate(s) via ${store.kind === "atlas" ? "Atlas $vectorSearch" : "demo cosine search"} with firm/client/status/expiry/access pre-filter`,
+          `${candidates.length} candidate(s) via ${vectorFallback ? "structured fallback (vector search unavailable)" : store.kind === "atlas" ? "Atlas $vectorSearch" : "demo cosine search"} with firm/client/status/expiry/access ${vectorFallback ? "checks in code" : "pre-filter"}`,
         );
       }
     }
@@ -246,7 +260,7 @@ export async function runAgent(
           ? m.firmId === ctx.firmId && m.clientId === clientId
             ? ({ ok: true } as const)
             : ({ ok: false, reason: "wrong_scope" } as const)
-          : eligibility(m as Memory, ctx, clientId, now, cfg.embedding.id);
+          : eligibility(m as Memory, ctx, clientId, now, vectorFallback ? undefined : cfg.embedding.id);
       if (e.ok && m.evidence.length) eligible.push(m);
       else run.errors.push(`Dropped retrieved memory ${m._id}: ${e.ok ? "no supporting evidence" : e.reason}`);
     }
