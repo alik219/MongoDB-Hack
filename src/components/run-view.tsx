@@ -87,33 +87,45 @@ export const PLANNED_STAGES = [
   "Revalidating & saving tasks",
 ];
 
+const SHORT_STAGES = ["Access", "Open tasks", "Memories", "Freshness", "Lender policies", "Planning", "Validation", "Saving"];
+
 /** Live pipeline while a run is in flight: nodes light up in order along a filling track. */
 export function StagesRunning({ step }: { step: number }) {
   const n = PLANNED_STAGES.length;
+  const cur = Math.min(step, n - 1);
+  // Each stage owns an equal column, so the track runs between the centres of the first and last columns.
+  const inset = 100 / (2 * n);
   return (
-    <div className="relative overflow-hidden rounded-xl border border-accent/20 bg-accent-soft/40 px-4 py-4">
+    <div className="@container relative overflow-hidden rounded-xl border border-accent/20 bg-accent-soft/40 px-2 py-4">
       <div className="sheen pointer-events-none absolute inset-0" />
       <div className="relative">
-        <div className="absolute left-0 right-0 top-[7px] h-px bg-line" />
+        <div className="absolute top-[7px] h-px bg-line" style={{ left: `${inset}%`, right: `${inset}%` }} />
         <motion.div
-          className="absolute left-0 top-[7px] h-px bg-gradient-to-r from-[#00a35c] to-[#00ed64]"
-          animate={{ width: `${(Math.min(step, n - 1) / (n - 1)) * 100}%` }}
+          className="absolute top-[7px] h-px bg-gradient-to-r from-[#00a35c] to-[#00ed64]"
+          style={{ left: `${inset}%` }}
+          animate={{ width: `${(cur / (n - 1)) * (100 - 2 * inset)}%` }}
           transition={{ duration: 0.35, ease: "easeOut" }}
         />
-        <ol className="relative flex justify-between">
-          {PLANNED_STAGES.map((label, i) => (
-            <li key={label} className="flex w-0 flex-col items-center">
+        <ol className="relative grid" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
+          {SHORT_STAGES.map((label, i) => (
+            <li key={label} className="flex min-w-0 flex-col items-center px-1">
               <motion.span
                 className={`h-[15px] w-[15px] rounded-full border-2 ${i < step ? "border-accent bg-accent" : i === step ? "border-accent bg-canvas" : "border-line bg-canvas"}`}
                 animate={i === step ? { scale: [1, 1.35, 1], boxShadow: ["0 0 0 0 rgba(0,237,100,.5)", "0 0 0 8px rgba(0,237,100,0)", "0 0 0 0 rgba(0,237,100,0)"] } : { scale: 1 }}
                 transition={i === step ? { duration: 1.1, repeat: Infinity } : { duration: 0.2 }}
               />
-              <span className={`mt-2 hidden w-24 text-center text-[10.5px] leading-tight sm:block ${i <= step ? "text-ink" : "text-muted"}`}>{label}</span>
+              <span
+                className={`mt-2 hidden w-full text-center text-[11px] leading-tight @[600px]:block ${i === cur ? "font-semibold text-accent" : i < step ? "text-ink" : "text-muted"}`}
+              >
+                {label}
+              </span>
             </li>
           ))}
         </ol>
       </div>
-      <p className="relative mt-3 text-center text-[12px] text-accent sm:hidden">{PLANNED_STAGES[Math.min(step, n - 1)]}…</p>
+      <p className="relative mt-3 text-center text-[12.5px] text-accent">
+        Step {cur + 1} of {n} · {PLANNED_STAGES[cur]}…
+      </p>
     </div>
   );
 }

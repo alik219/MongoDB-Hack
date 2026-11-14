@@ -180,3 +180,15 @@ describe("chat", () => {
     expect(run.trace?.retrieval?.engine).toMatch(/structured fallback/);
   });
 });
+
+describe("provider errors", () => {
+  it("explains an exhausted OpenAI balance in plain words, without raw JSON", async () => {
+    const { openaiErrorMessage } = await import("@/lib/ai/llm");
+    const msg = openaiErrorMessage(
+      429,
+      JSON.stringify({ error: { message: "You have no credits remaining.", type: "insufficient_quota", code: "credit_balance_exhausted" } }),
+    );
+    expect(msg).toMatch(/no credits left/);
+    expect(msg).not.toMatch(/[{}]/);
+  });
+});

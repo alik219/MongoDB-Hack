@@ -28,6 +28,25 @@ function strictify(node: unknown): unknown {
   return out;
 }
 
+/** Turn a provider error body into one plain sentence; never echo raw JSON to the advisor. */
+export function openaiErrorMessage(status: number, bodyText: string): string {
+  let message = "";
+  let code = "";
+  try {
+    const err = (JSON.parse(bodyText) as { error?: { message?: string; code?: string; type?: string } }).error;
+    message = err?.message ?? "";
+    code = `${err?.code ?? ""} ${err?.type ?? ""}`;
+  } catch {
+    message = bodyText.slice(0, 200);
+  }
+  if (status === 429 && /quota|credit|billing/i.test(`${code} ${message}`))
+    return "The OpenAI account for this API key has no credits left. Add credits at platform.openai.com under Billing, then try again.";
+  if (status === 429) return "OpenAI is rate limiting this API key. Wait a moment and try again.";
+  if (status === 401) return "OpenAI rejected the API key. Check OPENAI_API_KEY in .env.";
+  if (status === 404) return `OpenAI could not find the model. Check OPENAI_MODEL in .env. ${message}`.trim();
+  return `OpenAI request failed (${status}). ${message}`.trim();
+}
+
 export async function openaiParse<T extends z.ZodType>(system: string, user: string, schema: T): Promise<z.infer<T>> {
   const cfg = getConfig();
   const base = process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1";
@@ -46,7 +65,7 @@ export async function openaiParse<T extends z.ZodType>(system: string, user: str
       },
     }),
   });
-  if (!res.ok) throw new Error(`OpenAI request failed: ${res.status} ${(await res.text()).slice(0, 400)}`);
+  if (!res.ok) throw new Error(openaiErrorMessage(res.status, await res.text()));
   const json = (await res.json()) as {
     choices: { message: { content: string | null; refusal?: string | null }; finish_reason: string }[];
   };
