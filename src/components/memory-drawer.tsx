@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 import { api, fmtDate, fmtDateTime, label } from "./api";
 import { BasisBadge, CategoryBadge, ErrorState, MemoryRef, RestrictedBadge, Skeleton, Spinner, StatusPill } from "./ui";
@@ -94,7 +95,7 @@ export function SourceExcerpt({
         </button>
       </div>
       {open && (
-        <div className="mt-2 rounded-md border border-line bg-white p-2.5 text-[12.5px] leading-relaxed text-ink-soft">
+        <div className="mt-2 rounded-md border border-line bg-panel p-2.5 text-[12.5px] leading-relaxed text-ink-soft">
           {err ? (
             <ErrorState error={err} />
           ) : !src ? (
@@ -170,12 +171,15 @@ export function MemoryDrawer({
   const m = d?.memory;
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-ink/20" onClick={onClose}>
-      <aside
-        className="h-full w-full max-w-[560px] overflow-y-auto border-l border-line bg-white shadow-2xl"
+    <div className="fixed inset-0 z-40 flex justify-end bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <motion.aside
+        className="h-full w-full max-w-[560px] overflow-y-auto border-l border-line bg-panel shadow-2xl shadow-black"
         onClick={(e) => e.stopPropagation()}
+        initial={{ x: 60, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 380, damping: 36 }}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-white px-5 py-3">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-5 py-3">
           <p className="mono text-xs text-muted">{id}</p>
           <button className="btn-ghost" onClick={onClose}>
             Close ✕
@@ -192,7 +196,7 @@ export function MemoryDrawer({
                 <div className="flex flex-wrap items-center gap-1.5">
                   <StatusPill status={m.effectiveStatus} />
                   <CategoryBadge category={m.category} />
-                  <span className="chip bg-slate-100 text-slate-600">v{m.version}</span>
+                  <span className="chip bg-white/8 text-ink-soft">v{m.version}</span>
                   {m.status !== "forgotten" && <BasisBadge basis={m.basis} />}
                   {m.visibility === "restricted" && (
                     <RestrictedBadge names={m.allowedUserIds.map(nameOf).join(", ")} />
@@ -217,7 +221,7 @@ export function MemoryDrawer({
               </div>
 
               {m.status === "forgotten" && d.tombstone && (
-                <div className="rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm">
+                <div className="rounded-lg border border-line bg-white/5 p-3 text-sm">
                   <p className="font-semibold">Forgotten {fmtDateTime(d.tombstone.forgottenAt)} by {nameOf(d.tombstone.forgottenBy)}</p>
                   <p className="mt-1 text-ink-soft">Reason: {d.tombstone.reason}</p>
                   <ul className="mt-2 list-disc space-y-0.5 pl-5 text-xs text-ink-soft">
@@ -320,7 +324,7 @@ export function MemoryDrawer({
                         <StatusPill status={v.effectiveStatus} />
                         <span className="text-xs text-muted">{fmtDate(v.confirmedAt ?? v.createdAt)}</span>
                       </div>
-                      <p className={`mt-1 ${v.status === "superseded" ? "text-muted line-through decoration-slate-300" : "text-ink-soft"}`}>
+                      <p className={`mt-1 ${v.status === "superseded" ? "text-muted line-through decoration-muted" : "text-ink-soft"}`}>
                         {v.statement}
                       </p>
                     </li>
@@ -365,7 +369,7 @@ export function MemoryDrawer({
             </>
           )}
         </div>
-      </aside>
+      </motion.aside>
     </div>
   );
 }
@@ -484,7 +488,7 @@ function CorrectForm({ m, busy, onSubmit }: { m: MemoryViewDTO; busy: boolean; o
           })
         }
       >
-        {busy && <Spinner className="text-white" />} Save correction
+        {busy && <Spinner className="text-[#03201c]" />} Save correction
       </button>
     </div>
   );

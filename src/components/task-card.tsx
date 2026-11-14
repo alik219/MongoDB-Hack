@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "motion/react";
 import { useState } from "react";
 import { api, fmtDate, fmtDateTime } from "./api";
 import { SourceExcerpt } from "./memory-drawer";
@@ -92,18 +93,23 @@ export function TaskCard({
   const lastAgent = [...task.history].reverse().find((h) => h.actor === "agent");
 
   return (
-    <article
-      className={`rounded-xl border bg-white p-3.5 transition ${task.needsReview && open ? "border-warn/50 ring-1 ring-warn/20" : "border-line"} ${highlight ? "ring-2 ring-accent/30" : ""} ${!open ? "opacity-75" : ""}`}
+    <motion.article
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -2 }}
+      className={`card rounded-xl p-3.5 ${task.needsReview && open ? "border-warn/50 ring-1 ring-warn/20" : "border-line"} ${highlight ? "ring-2 ring-accent/30" : ""} ${!open ? "saturate-50" : ""}`}
     >
       <div className="flex flex-wrap items-center gap-1.5">
         <StatusPill status={task.status} />
         {task.needsReview && open && <span className="chip bg-warn-soft text-warn">⚠ Needs review</span>}
-        {gated && open && <span className="chip bg-slate-100 text-slate-600">On hold</span>}
+        {gated && open && <span className="chip bg-white/8 text-ink-soft">On hold</span>}
         {task.visibility === "restricted" && <RestrictedBadge />}
-        {highlight && <span className="chip bg-accent text-white">{highlight}</span>}
+        {highlight && <span className="chip bg-accent text-[#03201c]">{highlight}</span>}
         <span className="ml-auto text-[11px] text-muted">Owner: {names[task.ownerId] ?? task.ownerId}</span>
       </div>
-      <h3 className={`mt-2 text-[14px] font-semibold leading-snug ${task.status === "withdrawn" ? "text-muted line-through decoration-slate-300" : ""}`}>
+      <h3 className={`mt-2 text-[14px] font-semibold leading-snug ${task.status === "withdrawn" ? "text-muted line-through decoration-muted" : ""}`}>
         {task.title}
       </h3>
       {task.detail && <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">{task.detail}</p>}
@@ -210,6 +216,6 @@ export function TaskCard({
           </details>
         </div>
       )}
-    </article>
+    </motion.article>
   );
 }

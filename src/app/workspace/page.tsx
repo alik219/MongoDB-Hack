@@ -72,7 +72,7 @@ export default function WorkspacePage() {
     setRunning(true);
     setErr(null);
     setStep(0);
-    timer.current = setInterval(() => setStep((s) => Math.min(s + 1, 6)), 260);
+    timer.current = setInterval(() => setStep((s) => Math.min(s + 1, 7)), 260);
     try {
       const res = await api<{ run: RunDTO; tasks: TaskDTO[] }>("/api/agent/run", { body: { clientId, request } });
       await load();
@@ -103,7 +103,7 @@ export default function WorkspacePage() {
       <div className="space-y-4">
         <section className="card p-4">
           <p className="label">Active client</p>
-          <h1 className="mt-1 text-xl font-semibold tracking-tight">{client.name}</h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{client.name}</h1>
           <p className="text-sm text-muted">
             {client.profile.age} · {client.profile.occupation}
           </p>
@@ -157,7 +157,7 @@ export default function WorkspacePage() {
                 <li key={r._id}>
                   <button
                     onClick={() => setSelectedRun(r)}
-                    className={`w-full rounded-lg px-2.5 py-2 text-left text-[12.5px] ${selectedRun?._id === r._id ? "bg-canvas ring-1 ring-line" : "hover:bg-canvas"}`}
+                    className={`w-full rounded-lg px-2.5 py-2 text-left text-[12.5px] ${selectedRun?._id === r._id ? "bg-canvas ring-1 ring-line" : "hover:bg-white/5"}`}
                   >
                     <div className="flex items-center gap-1.5">
                       <StatusPill status={r.status} />
@@ -177,28 +177,31 @@ export default function WorkspacePage() {
 
       {/* Center: request, stages, brief */}
       <div className="min-w-0 space-y-4">
-        <section className="card p-4">
-          <label className="label" htmlFor="req">
-            Ask the agent
-          </label>
+        <section className="card relative overflow-hidden p-5">
+          <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-accent/10 blur-3xl" />
+          <p className="label">Governed agent</p>
+          <h2 className="mt-1 text-[22px] font-semibold leading-tight tracking-tight">
+            What should the agent prepare for <span className="text-gradient">{client.name.split(" ")[0]}</span>?
+          </h2>
           <textarea
             id="req"
-            className="input mt-2 text-[14px]"
+            aria-label="Ask the agent"
+            className="input mt-3 text-[14px]"
             rows={2}
             value={request}
             onChange={(e) => setRequest(e.target.value)}
           />
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <button className="btn-primary" onClick={run} disabled={running || request.trim().length < 3}>
-              {running ? <Spinner className="text-white" /> : "▶"} Start fresh agent run
+            <button className="btn-primary px-4 py-2" onClick={run} disabled={running || request.trim().length < 3}>
+              {running ? <Spinner className="text-[#03201c]" /> : "▶"} Start fresh agent run
             </button>
-            <p className="text-xs text-muted">
+            <p className="min-w-0 flex-1 text-xs text-muted">
               Each run starts with no conversation state. It only knows what it retrieves from memory, scoped to{" "}
               {client.name} and to what {session?.user.name.split(" ")[0]} may see.
             </p>
           </div>
           {running && (
-            <div className="mt-4 rounded-lg bg-canvas px-3 py-2.5">
+            <div className="mt-4">
               <StagesRunning step={step} />
             </div>
           )}
@@ -232,17 +235,17 @@ export default function WorkspacePage() {
                 <RunMeta run={selectedRun} names={names} />
               </div>
             </Section>
+            {(selectedRun.lenderChecks?.length ?? 0) > 0 && (
+              <Section title="Lender policy checks">
+                <LenderChecksView run={selectedRun} onOpenMemory={setMemoryId} />
+              </Section>
+            )}
             <Section title="Meeting brief">
               <BriefView run={selectedRun} onOpenMemory={setMemoryId} />
             </Section>
             <Section title="What changed in this run">
               <ActionList run={selectedRun} onOpenMemory={setMemoryId} />
             </Section>
-            {(selectedRun.lenderChecks?.length ?? 0) > 0 && (
-              <Section title="Lender policy checks">
-                <LenderChecksView run={selectedRun} onOpenMemory={setMemoryId} />
-              </Section>
-            )}
             <details className="card p-4" open={false}>
               <summary className="cursor-pointer text-sm font-semibold">
                 Retrieved context & policy decisions ({selectedRun.retrieved.length} memories)

@@ -119,13 +119,13 @@ export default function MemoryPage() {
           ))}
         </select>
         <div className="flex flex-wrap gap-1">
-          <button className={`chip px-2 py-1 ${!status ? "bg-ink text-white" : "bg-canvas text-ink-soft"}`} onClick={() => setStatus("")}>
+          <button className={`chip px-2 py-1 ${!status ? "bg-accent text-[#03201c]" : "bg-canvas text-ink-soft"}`} onClick={() => setStatus("")}>
             All {data?.memories.length ?? ""}
           </button>
           {STATUSES.map((s) => (
             <button
               key={s}
-              className={`chip px-2 py-1 capitalize ${status === s ? "bg-ink text-white" : "bg-canvas text-ink-soft"}`}
+              className={`chip px-2 py-1 capitalize ${status === s ? "bg-accent text-[#03201c]" : "bg-canvas text-ink-soft"}`}
               onClick={() => setStatus(status === s ? "" : s)}
             >
               {s} {counts[s] ?? 0}
@@ -176,19 +176,19 @@ function MemoryCard({
   return (
     <button
       onClick={onOpen}
-      className={`card flex flex-col p-4 text-left transition hover:border-accent/40 hover:shadow-sm ${dim ? "bg-white/70" : ""}`}
+      className={`card flex flex-col p-4 text-left transition hover:border-accent/40 hover:shadow-sm ${dim ? "opacity-70" : ""}`}
     >
       <div className="flex flex-wrap items-center gap-1.5">
         <StatusPill status={m.effectiveStatus} />
         <CategoryBadge category={m.category} />
-        <span className="chip bg-slate-100 text-slate-600">v{m.version}</span>
+        <span className="chip bg-white/8 text-ink-soft">v{m.version}</span>
         {m.visibility === "restricted" && <RestrictedBadge names={m.allowedUserIds.map((u) => names[u] ?? u).join(", ")} />}
         {m.reviewDue && <span className="chip bg-warn-soft text-warn">Review due</span>}
         {m.proposal?.kind === "update" && m.status === "proposed" && <span className="chip bg-warn-soft text-warn">Update</span>}
         {m.proposal?.kind === "conflict" && m.status === "proposed" && <span className="chip bg-danger-soft text-danger">Conflict</span>}
         {showClient && <span className="ml-auto text-[11px] text-muted">{m.clientName}</span>}
       </div>
-      <p className={`mt-2.5 text-[14px] font-medium leading-snug ${dim ? "text-muted" : "text-ink"} ${m.effectiveStatus === "superseded" ? "line-through decoration-slate-300" : ""}`}>
+      <p className={`mt-2.5 text-[14px] font-medium leading-snug ${dim ? "text-muted" : "text-ink"} ${m.effectiveStatus === "superseded" ? "line-through decoration-muted" : ""}`}>
         {m.statement}
       </p>
       {m.evidence[0] && (
@@ -309,7 +309,7 @@ function IngestPanel({
             <div className="flex flex-wrap gap-1.5">
               <span className="label self-center">Samples</span>
               {samples.map((s) => (
-                <button key={s.id} className="chip border border-line bg-white px-2 py-1 text-ink-soft hover:border-accent/40" onClick={() => pick(s.id)}>
+                <button key={s.id} className="chip border border-line bg-panel px-2 py-1 text-ink-soft hover:border-accent/40" onClick={() => pick(s.id)}>
                   {s.label}
                 </button>
               ))}
@@ -333,7 +333,7 @@ function IngestPanel({
           {hint && <p className="text-xs text-muted">ℹ {hint}</p>}
           <div className="flex flex-wrap items-center gap-2">
             <button className="btn-primary" onClick={submit} disabled={busy || text.trim().length < 10}>
-              {busy && <Spinner className="text-white" />} Extract proposed memories
+              {busy && <Spinner className="text-[#03201c]" />} Extract proposed memories
             </button>
             <label className="btn-secondary cursor-pointer">
               Upload .txt
@@ -373,7 +373,7 @@ function IngestPanel({
                     <div className="flex flex-wrap items-center gap-1.5">
                       <CategoryBadge category={p.category} />
                       <BasisBadge basis={p.basis} />
-                      {decided[p._id] && <span className="chip bg-ink text-white">{decided[p._id]}</span>}
+                      {decided[p._id] && <span className="chip bg-accent text-[#03201c]">{decided[p._id]}</span>}
                       <button className="ml-auto text-[11px] text-accent hover:underline" onClick={() => onOpen(p._id)}>
                         Details
                       </button>

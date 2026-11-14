@@ -157,7 +157,7 @@ export default function DatasetPage() {
                       <button
                         type="button"
                         onClick={() => setOpenId(r._id)}
-                        className={`w-full px-3 py-2 text-left hover:bg-canvas ${openId === r._id ? "bg-canvas" : ""}`}
+                        className={`w-full px-3 py-2 text-left hover:bg-white/5 ${openId === r._id ? "bg-canvas" : ""}`}
                       >
                         <div className="flex items-baseline justify-between gap-2">
                           <span className="truncate text-[13px] font-medium text-ink">{r.title}</span>

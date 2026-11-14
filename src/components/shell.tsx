@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "motion/react";
 import { useState } from "react";
 import { api } from "./api";
 import { useSession } from "./session";
@@ -42,10 +43,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-line bg-canvas/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2.5 sm:px-6">
           <Link href="/workspace" className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-ink text-[13px] font-bold text-white">C</span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#5eead4] via-[#7aa7ff] to-[#b79cff] text-[13px] font-bold text-[#03121f] shadow-[0_0_18px_-2px_rgba(94,234,212,0.6)]">
+              C
+            </span>
             <span className="text-[15px] font-semibold tracking-tight">Continuity</span>
           </Link>
           <nav className="-mx-1 flex max-w-full gap-1 overflow-x-auto text-sm">
@@ -53,9 +56,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
               <Link
                 key={n.href}
                 href={n.href}
-                className={`rounded-md px-2.5 py-1.5 font-medium ${path.startsWith(n.href) ? "bg-canvas text-ink" : "text-muted hover:text-ink"}`}
+                className={`relative rounded-md px-2.5 py-1.5 font-medium transition-colors ${path.startsWith(n.href) ? "text-ink" : "text-muted hover:text-ink"}`}
               >
-                {n.label}
+                {path.startsWith(n.href) && (
+                  <motion.span
+                    layoutId="nav-pill"
+                    className="absolute inset-0 rounded-md bg-white/8 ring-1 ring-white/10"
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                  />
+                )}
+                <span className="relative">{n.label}</span>
               </Link>
             ))}
           </nav>
@@ -64,7 +74,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               <label className="flex items-center gap-2 text-sm">
                 <span className="label">Client</span>
                 <select
-                  className="rounded-lg border border-line bg-white px-2 py-1.5 text-sm font-semibold"
+                  className="rounded-lg border border-line bg-raised px-2 py-1.5 text-sm font-semibold"
                   value={clientId ?? ""}
                   onChange={(e) => setClientId(e.target.value)}
                 >
@@ -105,7 +115,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   ● {allLive ? "Live services" : anyLive ? "Partly live" : "Demo mode"}
                 </button>
                 {showServices && (
-                  <div className="absolute right-0 top-9 w-[340px] rounded-xl border border-line bg-white p-4 text-sm shadow-lg">
+                  <div className="absolute right-0 top-9 w-[340px] rounded-xl border border-line bg-raised p-4 text-sm shadow-2xl shadow-black/60">
                     <p className="label mb-2">Backing services</p>
                     {(
                       [
