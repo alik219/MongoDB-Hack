@@ -106,7 +106,7 @@ export function TaskCard({
         {task.needsReview && open && <span className="chip bg-warn-soft text-warn">⚠ Needs review</span>}
         {gated && open && <span className="chip bg-white/8 text-ink-soft">On hold</span>}
         {task.visibility === "restricted" && <RestrictedBadge />}
-        {highlight && <span className="chip bg-accent text-[#03201c]">{highlight}</span>}
+        {highlight && <span className="chip bg-accent text-[#001e2b]">{highlight}</span>}
         <span className="ml-auto text-[11px] text-muted">Owner: {names[task.ownerId] ?? task.ownerId}</span>
       </div>
       <h3 className={`mt-2 text-[14px] font-semibold leading-snug ${task.status === "withdrawn" ? "text-muted line-through decoration-muted" : ""}`}>

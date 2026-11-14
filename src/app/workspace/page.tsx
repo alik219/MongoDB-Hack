@@ -103,7 +103,7 @@ export default function WorkspacePage() {
       <div className="space-y-4">
         <section className="card p-4">
           <p className="label">Active client</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{client.name}</h1>
+          <h1 className="mt-1 text-[28px] leading-tight">{client.name}</h1>
           <p className="text-sm text-muted">
             {client.profile.age} · {client.profile.occupation}
           </p>
@@ -193,7 +193,7 @@ export default function WorkspacePage() {
           />
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <button className="btn-primary px-4 py-2" onClick={run} disabled={running || request.trim().length < 3}>
-              {running ? <Spinner className="text-[#03201c]" /> : "▶"} Start fresh agent run
+              {running ? <Spinner className="text-white" /> : "▶"} Start fresh agent run
             </button>
             <p className="min-w-0 flex-1 text-xs text-muted">
               Each run starts with no conversation state. It only knows what it retrieves from memory, scoped to{" "}

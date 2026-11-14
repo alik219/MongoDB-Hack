@@ -46,7 +46,7 @@ export default function ActivityPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Activity</h1>
+          <h1 className="text-[32px] leading-tight">Activity</h1>
           <p className="text-sm text-muted">Minimal audit trail: who changed memory, tasks and runs, and when. Content is not copied here.</p>
         </div>
         <select className="input w-auto" value={clientFilter} onChange={(e) => setClientFilter(e.target.value)}>

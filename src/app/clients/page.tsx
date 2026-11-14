@@ -10,7 +10,7 @@ export default function ClientsPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Clients</h1>
+        <h1 className="text-[32px] leading-tight">Clients</h1>
         <p className="text-sm text-muted">
           Clients assigned to {session?.user.name} at {session?.firm?.name}. Clients outside your assignments or firm are not
           listed and cannot be queried.

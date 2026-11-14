@@ -105,7 +105,7 @@ export default function DatasetPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Dataset</h1>
+        <h1 className="text-[32px] leading-tight">Dataset</h1>
         <p className="text-sm text-muted">
           Every stored document for {client?.name ?? "this client"}. A document is evidence, not memory: the agent only uses facts an
           advisor has confirmed from it.

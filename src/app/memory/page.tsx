@@ -87,7 +87,7 @@ export default function MemoryPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Memory</h1>
+          <h1 className="text-[32px] leading-tight">Memory</h1>
           <p className="text-sm text-muted">
             What the agent is allowed to remember, who can see it, how long it lives, and what it has influenced.
           </p>
@@ -119,13 +119,13 @@ export default function MemoryPage() {
           ))}
         </select>
         <div className="flex flex-wrap gap-1">
-          <button className={`chip px-2 py-1 ${!status ? "bg-accent text-[#03201c]" : "bg-canvas text-ink-soft"}`} onClick={() => setStatus("")}>
+          <button className={`chip px-2 py-1 ${!status ? "bg-accent text-[#001e2b]" : "bg-canvas text-ink-soft"}`} onClick={() => setStatus("")}>
             All {data?.memories.length ?? ""}
           </button>
           {STATUSES.map((s) => (
             <button
               key={s}
-              className={`chip px-2 py-1 capitalize ${status === s ? "bg-accent text-[#03201c]" : "bg-canvas text-ink-soft"}`}
+              className={`chip px-2 py-1 capitalize ${status === s ? "bg-accent text-[#001e2b]" : "bg-canvas text-ink-soft"}`}
               onClick={() => setStatus(status === s ? "" : s)}
             >
               {s} {counts[s] ?? 0}
@@ -333,7 +333,7 @@ function IngestPanel({
           {hint && <p className="text-xs text-muted">ℹ {hint}</p>}
           <div className="flex flex-wrap items-center gap-2">
             <button className="btn-primary" onClick={submit} disabled={busy || text.trim().length < 10}>
-              {busy && <Spinner className="text-[#03201c]" />} Extract proposed memories
+              {busy && <Spinner className="text-white" />} Extract proposed memories
             </button>
             <label className="btn-secondary cursor-pointer">
               Upload .txt
@@ -373,7 +373,7 @@ function IngestPanel({
                     <div className="flex flex-wrap items-center gap-1.5">
                       <CategoryBadge category={p.category} />
                       <BasisBadge basis={p.basis} />
-                      {decided[p._id] && <span className="chip bg-accent text-[#03201c]">{decided[p._id]}</span>}
+                      {decided[p._id] && <span className="chip bg-accent text-[#001e2b]">{decided[p._id]}</span>}
                       <button className="ml-auto text-[11px] text-accent hover:underline" onClick={() => onOpen(p._id)}>
                         Details
                       </button>

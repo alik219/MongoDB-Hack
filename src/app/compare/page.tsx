@@ -51,7 +51,7 @@ export default function ComparePage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Memory influence comparison</h1>
+        <h1 className="text-[32px] leading-tight">Memory influence comparison</h1>
         <p className="text-sm text-muted">
           Same request, same (empty) set of open tasks, three memory conditions. Dry runs: nothing is saved.
         </p>
@@ -63,7 +63,7 @@ export default function ComparePage() {
       <div className="card flex flex-wrap items-center gap-3 p-4">
         <input className="input min-w-[280px] flex-1" value={request} onChange={(e) => setRequest(e.target.value)} />
         <button className="btn-primary" onClick={go} disabled={busy || !clientId}>
-          {busy && <Spinner className="text-[#03201c]" />} Compare for {client?.name}
+          {busy && <Spinner className="text-white" />} Compare for {client?.name}
         </button>
       </div>
       {err != null && <ErrorState error={err} onRetry={go} />}

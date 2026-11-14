@@ -488,7 +488,7 @@ function CorrectForm({ m, busy, onSubmit }: { m: MemoryViewDTO; busy: boolean; o
           })
         }
       >
-        {busy && <Spinner className="text-[#03201c]" />} Save correction
+        {busy && <Spinner className="text-white" />} Save correction
       </button>
     </div>
   );

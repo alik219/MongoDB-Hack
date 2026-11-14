@@ -96,7 +96,7 @@ export function StagesRunning({ step }: { step: number }) {
       <div className="relative">
         <div className="absolute left-0 right-0 top-[7px] h-px bg-line" />
         <motion.div
-          className="absolute left-0 top-[7px] h-px bg-gradient-to-r from-[#5eead4] to-[#7aa7ff]"
+          className="absolute left-0 top-[7px] h-px bg-gradient-to-r from-[#00a35c] to-[#00ed64]"
           animate={{ width: `${(Math.min(step, n - 1) / (n - 1)) * 100}%` }}
           transition={{ duration: 0.35, ease: "easeOut" }}
         />
@@ -105,7 +105,7 @@ export function StagesRunning({ step }: { step: number }) {
             <li key={label} className="flex w-0 flex-col items-center">
               <motion.span
                 className={`h-[15px] w-[15px] rounded-full border-2 ${i < step ? "border-accent bg-accent" : i === step ? "border-accent bg-canvas" : "border-line bg-canvas"}`}
-                animate={i === step ? { scale: [1, 1.35, 1], boxShadow: ["0 0 0 0 rgba(45,212,191,.5)", "0 0 0 8px rgba(45,212,191,0)", "0 0 0 0 rgba(45,212,191,0)"] } : { scale: 1 }}
+                animate={i === step ? { scale: [1, 1.35, 1], boxShadow: ["0 0 0 0 rgba(0,237,100,.5)", "0 0 0 8px rgba(0,237,100,0)", "0 0 0 0 rgba(0,237,100,0)"] } : { scale: 1 }}
                 transition={i === step ? { duration: 1.1, repeat: Infinity } : { duration: 0.2 }}
               />
               <span className={`mt-2 hidden w-24 text-center text-[10.5px] leading-tight sm:block ${i <= step ? "text-ink" : "text-muted"}`}>{label}</span>
@@ -333,9 +333,9 @@ export function RunMeta({ run, names }: { run: RunDTO; names: Record<string, str
 }
 
 const DECISION_STYLE: Record<string, { chip: string; glow: string; bar: string; word: string }> = {
-  approve: { chip: "bg-accent-soft text-accent ring-1 ring-accent/30", glow: "shadow-[0_0_40px_-18px_rgba(45,212,191,0.9)] border-accent/30", bar: "from-[#5eead4] to-[#2dd4bf]", word: "Approve" },
-  refer: { chip: "bg-warn-soft text-warn ring-1 ring-warn/30", glow: "shadow-[0_0_40px_-18px_rgba(251,191,36,0.9)] border-warn/30", bar: "from-[#fde68a] to-[#fbbf24]", word: "Refer" },
-  decline: { chip: "bg-danger-soft text-danger ring-1 ring-danger/30", glow: "shadow-[0_0_40px_-18px_rgba(251,113,133,0.9)] border-danger/30", bar: "from-[#fda4af] to-[#fb7185]", word: "Decline" },
+  approve: { chip: "bg-accent-soft text-accent ring-1 ring-accent/30", glow: "border-accent/30", bar: "from-[#00a35c] to-[#00ed64]", word: "Approve" },
+  refer: { chip: "bg-warn-soft text-warn ring-1 ring-warn/30", glow: "border-warn/30", bar: "from-[#ffc010] to-[#ffc010]", word: "Refer" },
+  decline: { chip: "bg-danger-soft text-danger ring-1 ring-danger/30", glow: "border-danger/30", bar: "from-[#ff6960] to-[#ff6960]", word: "Decline" },
 };
 const OUTCOME_MARK: Record<string, string> = { pass: "✓", fail: "✕", unknown: "?" };
 const PRODUCT_LABEL: Record<string, string> = {
