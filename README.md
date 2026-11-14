@@ -33,24 +33,24 @@ Every project **must** fit one of these three tracks.
 2. **Memory You Can Govern.** Build an agent that uses MongoDB Atlas and Vector Search to store and retrieve memory that changes what it does on the next run. Include rules for who can read each memory, how long it lives, and how it gets corrected or forgotten.
 3. **Finish the Job.** Build an agent that completes a long, multi-step task across several systems. It uses MongoDB Atlas to persist verified task state and Vector Search to retrieve past experience, so it survives crashes and system changes and knows what actually happened.
 
-**Our track:** _TBD — decide as a team at kickoff._
+**Our track:** 2. Memory You Can Govern.
 
 ---
 
 ## 💡 Our project
 
-> _Fill this in once we pick an idea._
-
-- **Name:** TBD
-- **Track:** TBD
-- **One-liner:** TBD
-- **How it uses MongoDB Atlas / Vector Search:** TBD
+- **Name:** Continuity
+- **Track:** 2. Memory You Can Govern
+- **One-liner:** An advisor's agent whose client memory is governed: who can read it, how long it lives, how it is corrected or forgotten, and proof that it changed the next decision.
+- **How it uses MongoDB Atlas / Vector Search:** memories are versioned documents; retrieval is `$vectorSearch` with a firm/client/status/expiry/access pre-filter (Atlas auto-embedding or Voyage via the MongoDB Model API); lender policies, audit events, tombstones and runs live in Atlas.
 
 ### Tech stack
-- **Database:** MongoDB Atlas (+ Atlas Vector Search)
-- **Agent / LLM:** TBD
-- **Backend:** TBD
-- **Frontend:** TBD
+- **Database:** MongoDB Atlas (+ Atlas Vector Search, auto-embedding)
+- **Agent / LLM:** OpenAI (structured outputs) for extraction and planning; ElevenLabs voice agent
+- **Backend:** Next.js API routes (TypeScript) + Go tool service (`agent-tools/`)
+- **Frontend:** Next.js + Tailwind
+
+Setup: [docs/SETUP.md](docs/SETUP.md). Design: [docs/CONTINUITY.md](docs/CONTINUITY.md).
 
 ### Running it locally
 ```bash

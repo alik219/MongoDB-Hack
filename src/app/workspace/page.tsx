@@ -16,6 +16,7 @@ import {
   type RunDTO,
 } from "@/components/run-view";
 import { useSession } from "@/components/session";
+import { VoiceAgent } from "@/components/voice-agent";
 import { TaskCard, type TaskDTO } from "@/components/task-card";
 import { Empty, ErrorState, RestrictedBadge, Section, Skeleton, Spinner, StatusPill } from "@/components/ui";
 import { DEFAULT_REQUEST } from "@/lib/samples";
@@ -133,6 +134,14 @@ export default function WorkspacePage() {
             {client.counts.expired > 0 && <span className="chip bg-warn-soft text-warn">{client.counts.expired} expired</span>}
             {client.counts.restricted > 0 && <RestrictedBadge names={`${client.counts.restricted} visible to you`} />}
           </div>
+        </section>
+
+        <section className="card p-4">
+          <p className="label mb-2">Voice agent</p>
+          <p className="mb-2 text-[12px] text-muted">
+            Ask about {client.name.split(" ")[0]} by voice. It reads only memories you may see and saves new facts as proposals for you to confirm.
+          </p>
+          <VoiceAgent clientId={client._id} clientName={client.name} />
         </section>
 
         <section className="card p-4">
