@@ -77,9 +77,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen lg:pl-[232px]">
+    <div className="min-h-screen md:pl-[232px]">
       {/* Sidebar (desktop) */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[232px] flex-col border-r border-line bg-canvas lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[232px] flex-col border-r border-line bg-canvas md:flex">
         <div className="px-5 py-6">
           <Brand />
         </div>
@@ -120,7 +120,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       {/* Top bar */}
       <header className="sticky top-0 z-20 border-b border-line bg-canvas/95 backdrop-blur">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-7">
-          <div className="lg:hidden">
+          <div className="md:hidden">
             <Brand />
           </div>
           <div className="flex items-center gap-4">
@@ -148,7 +148,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </label>
             )}
           </div>
-          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3 lg:ml-auto">
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3 md:ml-auto">
             {session && (
               <label className="flex min-w-0 max-w-full items-center gap-2 rounded-md border border-dashed border-warn/50 bg-warn-soft/50 px-2.5 py-1.5 text-sm">
                 <span
@@ -214,7 +214,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         {/* Navigation (narrow screens) */}
-        <nav className="flex gap-1 overflow-x-auto border-t border-line px-3 py-1.5 text-sm lg:hidden">
+        <nav className="flex gap-1 overflow-x-auto border-t border-line px-3 py-1.5 text-sm md:hidden">
           {NAV.flatMap((g) => g.items).map((n) => (
             <Link
               key={n.href}
