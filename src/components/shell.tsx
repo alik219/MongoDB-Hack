@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import { useSession } from "./session";
 import { ErrorState, Spinner } from "./ui";
@@ -51,11 +51,61 @@ const NAV: {
   },
 ];
 
+const OPEN_W = 264;
+const RAIL_W = 64;
+const SPRING = { type: "spring", stiffness: 380, damping: 38 } as const;
+
+function Mark() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7 shrink-0" aria-hidden>
+      <path d="M12 3.500a8.500 8.500 0 1 0 8.500 8.500" fill="none" stroke="#00ed64" strokeWidth="1.800" strokeLinecap="round" />
+      <path d="M12 3.500l2.800-2.200M12 3.500l2.600 2.400" fill="none" stroke="#00ed64" strokeWidth="1.800" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="2.600" fill="#00ed64" />
+    </svg>
+  );
+}
+function Wordmark() {
+  return (
+    <span className="whitespace-nowrap font-serif text-[24px] leading-none text-accent">
+      Recall<span className="text-ink-soft">.IQ</span>
+    </span>
+  );
+}
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { session, clients, clientId, setClientId, bump, error } = useSession();
   const [busy, setBusy] = useState(false);
   const [showServices, setShowServices] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [closedGroups, setClosedGroups] = useState<Record<string, boolean>>({});
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const open = pinned || hovered;
+
+  useEffect(() => {
+    try {
+      setPinned(localStorage.getItem("recalliq_sidebar") === "pinned");
+    } catch {
+      /* storage unavailable: stay on the hover rail */
+    }
+  }, []);
+
+  // A short delay in each direction stops the rail from flickering when the pointer only passes over it.
+  const hover = (on: boolean) => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => setHovered(on), on ? 70 : 220);
+  };
+  const togglePin = () => {
+    const next = !pinned;
+    setPinned(next);
+    if (!next) setHovered(false);
+    try {
+      localStorage.setItem("recalliq_sidebar", next ? "pinned" : "rail");
+    } catch {
+      /* ignore */
+    }
+  };
   const allLive =
     session &&
     session.live.storage &&
@@ -83,71 +133,163 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen lg:flex">
-      {/* Sidebar: product mark and sectioned navigation */}
-      <aside className="z-30 shrink-0 border-b border-line bg-canvas lg:sticky lg:top-0 lg:h-screen lg:w-[264px] lg:border-b-0 lg:border-r">
-        <Link
-          href="/workspace"
-          className="flex items-center gap-2.5 px-5 pb-3 pt-5"
-        >
-          <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden>
-            <path d="M12 3.500a8.500 8.500 0 1 0 8.500 8.500" fill="none" stroke="#00ed64" strokeWidth="1.800" strokeLinecap="round" />
-            <path d="M12 3.500l2.800-2.200M12 3.500l2.600 2.400" fill="none" stroke="#00ed64" strokeWidth="1.800" strokeLinecap="round" />
-            <circle cx="12" cy="12" r="2.600" fill="#00ed64" />
-          </svg>
-          <span className="font-serif text-[24px] leading-none text-accent">
-            Recall<span className="text-ink-soft">.IQ</span>
-          </span>
+      {/* Small screens: compact top bar with horizontal navigation */}
+      <div className="z-30 border-b border-line bg-canvas lg:hidden">
+        <Link href="/workspace" className="flex items-center gap-2.5 px-4 pb-2 pt-4">
+          <Mark />
+          <Wordmark />
         </Link>
-        <nav className="flex gap-6 overflow-x-auto px-3 pb-3 lg:block lg:overflow-visible lg:px-0 lg:pb-0 lg:pt-3">
-          {NAV.map((g) => (
-            <div key={g.section} className="shrink-0 lg:mb-5">
-              <p className="flex items-center gap-2 px-2 py-1.5 text-[12px] font-bold uppercase tracking-[0.08em] text-accent lg:px-5">
-                <svg
-                  viewBox="0 0 16 16"
-                  className="h-4 w-4"
-                  fill="currentColor"
-                  aria-hidden
-                >
-                  {ICON[g.icon]}
-                </svg>
-                {g.section}
-              </p>
-              <ul className="flex lg:block">
-                {g.items.map((n) => {
-                  const active = path.startsWith(n.href);
-                  return (
-                    <li key={n.href}>
-                      <Link
-                        href={n.href}
-                        className={`relative block whitespace-nowrap px-3 py-2 text-[14.5px] transition-colors lg:py-2.5 lg:pl-[46px] lg:pr-5 ${active ? "font-semibold text-ink" : "text-ink-soft hover:bg-raised hover:text-ink"}`}
-                      >
-                        {active && (
-                          <motion.span
-                            layoutId="nav-active"
-                            className="absolute inset-0 bg-accent-soft"
-                            transition={{
-                              type: "spring",
-                              stiffness: 420,
-                              damping: 36,
-                            }}
-                          >
-                            <span className="absolute inset-y-0 left-0 hidden w-1 rounded-r bg-accent lg:block" />
-                          </motion.span>
-                        )}
-                        <span className="relative">{n.label}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+        <nav className="flex gap-1 overflow-x-auto px-2 pb-2">
+          {NAV.flatMap((g) => g.items).map((n) => (
+            <Link
+              key={n.href}
+              href={n.href}
+              className={`whitespace-nowrap rounded-md px-3 py-1.5 text-[14px] ${path.startsWith(n.href) ? "bg-accent-soft font-semibold text-ink" : "text-ink-soft"}`}
+            >
+              {n.label}
+            </Link>
           ))}
         </nav>
-      </aside>
+      </div>
+
+      {/* Large screens: an icon rail that opens on hover, or stays open when pinned (as the Atlas console does) */}
+      <motion.div
+        className="hidden shrink-0 lg:block"
+        initial={false}
+        animate={{ width: pinned ? OPEN_W : RAIL_W }}
+        transition={SPRING}
+        aria-hidden
+      />
+      <motion.aside
+        className={`fixed left-0 top-0 z-40 hidden h-screen overflow-hidden border-r border-line bg-canvas lg:block ${open && !pinned ? "shadow-[8px_0_40px_rgba(0,0,0,0.55)]" : ""}`}
+        initial={false}
+        animate={{ width: open ? OPEN_W : RAIL_W }}
+        transition={SPRING}
+        onMouseEnter={() => hover(true)}
+        onMouseLeave={() => hover(false)}
+        onFocusCapture={() => setHovered(true)}
+        onBlurCapture={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHovered(false);
+        }}
+      >
+        <div className="flex h-full flex-col" style={{ width: OPEN_W }}>
+          <Link
+            href="/workspace"
+            className="flex h-[65px] shrink-0 items-center gap-2.5 border-b border-line pl-[18px]"
+            aria-label="Recall.IQ workspace"
+          >
+            <Mark />
+            <motion.span initial={false} animate={{ opacity: open ? 1 : 0, x: open ? 0 : -6 }} transition={{ duration: 0.18 }}>
+              <Wordmark />
+            </motion.span>
+          </Link>
+          <nav className="flex-1 overflow-y-auto overflow-x-hidden pt-3">
+            {NAV.map((g) => {
+              const groupActive = g.items.some((n) => path.startsWith(n.href));
+              const expanded = open && !closedGroups[g.section];
+              return (
+                <div key={g.section} className="mb-1">
+                  <button
+                    type="button"
+                    onClick={() => setClosedGroups((c) => ({ ...c, [g.section]: !c[g.section] }))}
+                    aria-expanded={expanded}
+                    tabIndex={open ? 0 : -1}
+                    className="group flex w-full items-center gap-3 py-2.5 pl-3 pr-5 text-left"
+                  >
+                    <span
+                      className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg transition-colors ${!open && groupActive ? "bg-accent-soft text-accent" : "text-accent"}`}
+                    >
+                      <svg viewBox="0 0 16 16" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden>
+                        {ICON[g.icon]}
+                      </svg>
+                    </span>
+                    <motion.span
+                      initial={false}
+                      animate={{ opacity: open ? 1 : 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="flex flex-1 items-center justify-between text-[12.5px] font-bold uppercase tracking-[0.08em] text-accent"
+                    >
+                      {g.section}
+                      <motion.svg
+                        viewBox="0 0 10 6"
+                        className="h-1.5 w-2.5 text-accent"
+                        fill="currentColor"
+                        initial={false}
+                        animate={{ rotate: closedGroups[g.section] ? 180 : 0 }}
+                        aria-hidden
+                      >
+                        <path d="M5 0 10 6H0z" />
+                      </motion.svg>
+                    </motion.span>
+                  </button>
+                  <motion.ul
+                    initial={false}
+                    animate={{ height: expanded ? "auto" : 0, opacity: expanded ? 1 : 0 }}
+                    transition={{ height: SPRING, opacity: { duration: 0.15 } }}
+                    className="overflow-hidden"
+                  >
+                    {g.items.map((n) => {
+                      const active = path.startsWith(n.href);
+                      return (
+                        <li key={n.href}>
+                          <Link
+                            href={n.href}
+                            tabIndex={expanded ? 0 : -1}
+                            className={`relative block whitespace-nowrap py-2.5 pl-[64px] pr-5 text-[14.5px] transition-colors ${active ? "font-semibold text-ink" : "text-ink-soft hover:bg-raised hover:text-ink"}`}
+                          >
+                            {active && (
+                              <motion.span
+                                layoutId="nav-active"
+                                className="absolute inset-0 bg-accent-soft"
+                                transition={{ type: "spring", stiffness: 420, damping: 36 }}
+                              >
+                                <span className="absolute inset-y-0 left-0 w-1 rounded-r bg-accent" />
+                              </motion.span>
+                            )}
+                            <span className="relative">{n.label}</span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </motion.ul>
+                </div>
+              );
+            })}
+          </nav>
+          <div className="shrink-0 border-t border-line p-3">
+            <button
+              type="button"
+              onClick={togglePin}
+              aria-pressed={pinned}
+              title={pinned ? "Collapse sidebar" : "Keep sidebar open"}
+              className="flex h-10 items-center gap-3 rounded-lg pr-3 text-[13px] text-ink-soft hover:bg-raised hover:text-ink"
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center">
+                <motion.svg
+                  viewBox="0 0 16 16"
+                  className="h-[18px] w-[18px]"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  initial={false}
+                  animate={{ rotate: pinned ? 0 : 180 }}
+                  aria-hidden
+                >
+                  <rect x="1.7" y="2.2" width="12.6" height="11.6" rx="2" />
+                  <path d="M5.6 2.200v11.600M11 6 9 8l2 2" strokeLinecap="round" strokeLinejoin="round" />
+                </motion.svg>
+              </span>
+              <motion.span initial={false} animate={{ opacity: open ? 1 : 0 }} transition={{ duration: 0.15 }} className="whitespace-nowrap">
+                {pinned ? "Collapse sidebar" : "Keep sidebar open"}
+              </motion.span>
+            </button>
+          </div>
+        </div>
+      </motion.aside>
 
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-20 border-b border-line bg-canvas/95 backdrop-blur">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2.5 sm:px-8">
+          <div className="flex min-h-[64px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2.5 sm:px-8">
             {session?.firm && (
               <div className="min-w-0">
                 <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-accent">
