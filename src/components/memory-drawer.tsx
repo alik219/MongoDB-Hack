@@ -484,7 +484,14 @@ function CorrectForm({ m, busy, onSubmit }: { m: MemoryViewDTO; busy: boolean; o
             action: "correct",
             statement,
             reason,
-            attributes: Object.fromEntries(attrs.map(([k, v]) => [k, v === "true" ? true : v === "false" ? false : v])),
+            attributes: Object.fromEntries(
+              attrs.map(([k, v]) => {
+                // Keep numbers numeric: the lender engine only reads numeric facts.
+                const wasNumber = typeof m.structured.attributes[k] === "number";
+                const n = Number(v.trim());
+                return [k, v === "true" ? true : v === "false" ? false : wasNumber && v.trim() !== "" && Number.isFinite(n) ? n : v];
+              }),
+            ),
           })
         }
       >

@@ -453,7 +453,13 @@ export async function correctMemory(
     safetyFlags: [],
   };
   await store.sources.insertOne(src);
-  const attributes = input.attributes ?? m.structured.attributes;
+  // A numeric fact stays numeric even if a client sends it as text, so a correction cannot silently drop it from the lender engine.
+  const attributes: Record<string, Attr> = { ...(input.attributes ?? m.structured.attributes) };
+  for (const [k, v] of Object.entries(attributes)) {
+    if (typeof m.structured.attributes[k] === "number" && typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v))) {
+      attributes[k] = Number(v);
+    }
+  }
   const next = buildMemory({
     firmId: ctx.firmId,
     clientId: client._id,

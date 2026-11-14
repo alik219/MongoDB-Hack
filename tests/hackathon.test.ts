@@ -80,7 +80,8 @@ describe("governed memory changes the lender outcome", () => {
     const fact = (await store.memories.find({ clientId: PRIYA, status: "active", "structured.topic": "move_up_mortgage_request" }))[0];
     await correctMemory(await tomas(), fact._id, {
       statement: "Move-up home stressed TDS is 54.1% once guaranteed business payments are counted.",
-      attributes: { mortgage_down_payment_pct: 0.361, mortgage_stressed_gds: 0.344, mortgage_stressed_tds: 0.541 },
+      // Sent as text, as a form would: the service must keep these numeric for the lender engine.
+      attributes: { mortgage_down_payment_pct: "0.361", mortgage_stressed_gds: "0.344", mortgage_stressed_tds: "0.541" },
       reason: "Lenders count the personal guarantee",
     });
     const after = await runAgent(await tomas(), PRIYA, "Prepare mortgage options for Priya's move-up home.");
