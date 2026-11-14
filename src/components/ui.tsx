@@ -30,6 +30,7 @@ const CATEGORY_STYLES: Record<string, string> = {
   preference: "text-indigo-700 bg-indigo-50",
   advisor_commitment: "text-teal-800 bg-teal-50",
   life_event: "text-rose-700 bg-rose-50",
+  financial_fact: "text-violet-800 bg-violet-50",
 };
 
 export function CategoryBadge({ category }: { category: string }) {

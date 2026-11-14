@@ -87,7 +87,8 @@ export function createMongoStore(db: Db): Store {
         {
           $vectorSearch: {
             index: VECTOR_INDEX_NAME,
-            path: "embedding",
+            // Auto-embedding indexes the text field; Atlas embeds the query text with the same model.
+            path: args.queryText !== undefined && !args.queryVector ? "embeddingText" : "embedding",
             ...(args.queryText !== undefined && !args.queryVector
               ? { query: { text: args.queryText } }
               : { queryVector: args.queryVector }),

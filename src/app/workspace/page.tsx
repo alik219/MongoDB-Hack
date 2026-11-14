@@ -8,6 +8,7 @@ import {
   ActionList,
   BriefView,
   LenderChecksView,
+  TraceView,
   RetrievalView,
   RunMeta,
   RunStatusBanner,
@@ -248,6 +249,12 @@ export default function WorkspacePage() {
               </summary>
               <div className="mt-3">
                 <RetrievalView run={selectedRun} onOpenMemory={setMemoryId} />
+              </div>
+            </details>
+            <details className="card p-4" open>
+              <summary className="cursor-pointer text-sm font-semibold">Technical trace: query, scores, facts and policy versions</summary>
+              <div className="mt-3">
+                <TraceView run={selectedRun} onOpenMemory={setMemoryId} />
               </div>
             </details>
           </>

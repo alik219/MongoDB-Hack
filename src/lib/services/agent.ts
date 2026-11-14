@@ -19,6 +19,7 @@ import {
   type RetrievedMemoryRef,
   type Run,
   type RunStage,
+  type RunTrace,
   type Task,
   type TaskDependency,
 } from "../types";
@@ -175,6 +176,13 @@ export async function runAgent(
     // 3. Retrieve: Atlas Vector Search with the authorization pre-filter.
     const now = clock.now();
     let candidates: ScoredMemory[] = [];
+    const trace: RunTrace = {
+      retrieval: null,
+      policies: [],
+      factsLoaded: 0,
+      planner: { provider: cfg.planner.provider, model: cfg.planner.model, memoriesSent: 0, lenderChecksSent: 0, openTasksSent: 0 },
+    };
+    run.trace = trace;
     if (memoryMode === "none") {
       timer.done("retrieve", "Retrieving memories", "Skipped: memory disabled for this comparison", "skipped");
     } else {
@@ -183,18 +191,45 @@ export async function runAgent(
       const [queryVector] = auto ? [demoEmbed(queryText, 256)] : await embed([queryText], "query");
       if (memoryMode === "original_snapshot") {
         candidates = await originalSnapshot(store, ctx, clientId, queryVector);
+        trace.retrieval = {
+          engine: "version history (in-app ranking)",
+          index: null,
+          path: null,
+          queryMode: "version_history",
+          queryText,
+          embeddingModel: cfg.embedding.id,
+          numCandidates: 0,
+          limit: RETRIEVAL_LIMIT,
+          filterJson: JSON.stringify({ firmId: ctx.firmId, clientId }),
+          returned: candidates.length,
+          droppedAfterRecheck: 0,
+        };
         timer.done(
           "retrieve",
           "Retrieving memories",
           `${candidates.length} memories as confirmed before the first correction (reconstructed from version history, ranked in-app)`,
         );
       } else {
+        const filter = retrievalFilter(ctx, clientId, now, cfg.embedding.id);
         candidates = await store.vectorSearchMemories({
           ...(auto ? { queryText } : { queryVector }),
-          filter: retrievalFilter(ctx, clientId, now, cfg.embedding.id),
+          filter,
           limit: RETRIEVAL_LIMIT,
           numCandidates: RETRIEVAL_LIMIT * 20,
         });
+        trace.retrieval = {
+          engine: store.kind === "atlas" ? "Atlas $vectorSearch" : "demo cosine search (in-process)",
+          index: store.kind === "atlas" ? (process.env.ATLAS_VECTOR_INDEX ?? "memory_vector_index") : null,
+          path: store.kind === "atlas" ? (auto ? "embeddingText" : "embedding") : null,
+          queryMode: auto ? "auto_embed_text" : "query_vector",
+          queryText,
+          embeddingModel: cfg.embedding.id,
+          numCandidates: RETRIEVAL_LIMIT * 20,
+          limit: RETRIEVAL_LIMIT,
+          filterJson: JSON.stringify(filter),
+          returned: candidates.length,
+          droppedAfterRecheck: 0,
+        };
         timer.done(
           "retrieve",
           "Retrieving memories",
@@ -215,6 +250,7 @@ export async function runAgent(
       if (e.ok && m.evidence.length) eligible.push(m);
       else run.errors.push(`Dropped retrieved memory ${m._id}: ${e.ok ? "no supporting evidence" : e.reason}`);
     }
+    if (trace.retrieval) trace.retrieval.droppedAfterRecheck = candidates.length - eligible.length;
     // 4b. Lender policies: structured (not vector) retrieval of every authorized financial fact,
     // then a deterministic rule engine. The model never decides eligibility; it only sees the result.
     let lenderChecks: LenderCheck[] = [];
@@ -239,6 +275,18 @@ export async function runAgent(
       const policies = await store.lenderPolicies.find({ status: "current" });
       lenderChecks = evaluateAll(policies, facts, productsForRequest(run.request));
       run.lenderChecks = lenderChecks;
+      trace.factsLoaded = Object.keys(facts).length;
+      trace.policies = policies
+        .filter((p) => lenderChecks.some((c) => c.policyId === p._id))
+        .map((p) => ({
+          policyId: p._id,
+          bank: p.bank,
+          product: p.product,
+          version: p.version,
+          effectiveDate: p.effectiveDate,
+          contentHash: p.contentHash,
+          sourceFile: p.sourceFile,
+        }));
       const tally = (d: string) => lenderChecks.filter((c) => c.decision === d).length;
       timer.done(
         "lender",
@@ -346,6 +394,9 @@ export async function runAgent(
         gatedOnKeys: t.gatedOnKeys,
       })),
     };
+    trace.planner.memoriesSent = input.memories.length;
+    trace.planner.lenderChecksSent = input.lenderChecks?.length ?? 0;
+    trace.planner.openTasksSent = input.openTasks.length;
     let plan: PlanOutput;
     try {
       plan = await planner(input);
