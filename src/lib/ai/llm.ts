@@ -36,6 +36,9 @@ export async function openaiParse<T extends z.ZodType>(system: string, user: str
     headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
     body: JSON.stringify({
       model: cfg.planner.model,
+      // Optional output cap. Without it, credit-metered gateways (OpenRouter) reserve the model's full
+      // output window and reject the call when the balance cannot cover it.
+      ...(Number(process.env.OPENAI_MAX_TOKENS) > 0 ? { max_tokens: Number(process.env.OPENAI_MAX_TOKENS) } : {}),
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },

@@ -305,6 +305,10 @@ export interface AuditEvent {
   targetId: string;
   at: string;
   details: Record<string, unknown>;
+  /** Tamper-evident chain (see audit-chain.ts). Absent on events written before chaining existed. */
+  seq?: number;
+  prevHash?: string;
+  hash?: string;
 }
 
 // ---------- Planner I/O (validated) ----------

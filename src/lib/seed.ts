@@ -1,3 +1,4 @@
+import { appendAudit } from "./audit-chain";
 import { demoExtract, detectInstructionLikeText } from "./ai/extract";
 import { buildMemory, embeddingFields, parseAttrs } from "./memory-doc";
 import { seedHackathon } from "./hackathon";
@@ -329,7 +330,7 @@ export async function seedDemoData(store: Store) {
   const harborMems = await memoriesFromSource(store, saraHr, hJun, "usr_elena");
 
   await store.memories.insertMany([...marchMems, estate, ...danielMems, conflictProposal, ...harborMems]);
-  await store.audit.insertOne({
+  await appendAudit(store, {
     _id: newId("aud"),
     firmId: "frm_northlight",
     clientId: sarah._id,

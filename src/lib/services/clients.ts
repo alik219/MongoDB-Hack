@@ -1,3 +1,4 @@
+import { verifyAuditChain } from "../audit-chain";
 import { authorizeClient, type AuthContext } from "../auth";
 import { getConfig, serviceLabels } from "../config";
 import { canSeeMemory, effectiveStatus } from "../policy";
@@ -78,6 +79,11 @@ export async function compareRuns(ctx: AuthContext, clientId: string, request: s
       { key: "current", label: "After correction", run: current.run },
     ],
   };
+}
+
+/** Re-computes the firm's audit hash chain and reports the first event that was altered, if any. */
+export async function verifyAudit(ctx: AuthContext) {
+  return verifyAuditChain(await getStore(), ctx.firmId);
 }
 
 export async function clientActivity(ctx: AuthContext, clientId?: string) {

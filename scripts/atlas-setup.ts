@@ -81,7 +81,12 @@ const indexes: Record<string, [Record<string, 1 | -1>, object?][]> = {
   ],
   tasks: [[{ firmId: 1, clientId: 1, status: 1 }], [{ "dependsOn.lineageId": 1 }], [{ firmId: 1, clientId: 1, key: 1, status: 1 }]],
   runs: [[{ firmId: 1, clientId: 1, createdAt: -1 }]],
-  audit_events: [[{ firmId: 1, clientId: 1, at: -1 }], [{ targetId: 1 }]],
+  audit_events: [
+    [{ firmId: 1, clientId: 1, at: -1 }],
+    [{ targetId: 1 }],
+    // One hash chain per firm: a sequence number can be used once (see src/lib/audit-chain.ts).
+    [{ firmId: 1, seq: 1 }, { unique: true, partialFilterExpression: { seq: { $exists: true } } }],
+  ],
   forget_tombstones: [[{ firmId: 1, clientId: 1 }], [{ fingerprints: 1 }]],
   lender_policies: [[{ product: 1, status: 1 }]],
 };

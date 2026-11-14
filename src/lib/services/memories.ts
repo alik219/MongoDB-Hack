@@ -1,3 +1,4 @@
+import { checkMemoryContent } from "../memory-gate";
 import { authorizeClient, badRequest, conflict, denied, notFound, requireLeadAdvisor, type AuthContext } from "../auth";
 import { extractMemories, detectInstructionLikeText } from "../ai/extract";
 import { buildMemory, embeddingFields, parseAttrs } from "../memory-doc";
@@ -273,6 +274,7 @@ async function proposeFromSource(store: Store, ctx: AuthContext, client: Client,
 
   const proposals: Memory[] = [];
   const skipped: IngestResult["skipped"] = [];
+  const gateRejections: string[] = [];
   for (const e of output.memories) {
     // 1. Evidence must actually be in the source. No invented quotations.
     if (!text.includes(e.excerpt)) {
@@ -303,6 +305,13 @@ async function proposeFromSource(store: Store, ctx: AuthContext, client: Client,
     let target: Memory | undefined;
     if (e.relation !== "new" && e.targetMemoryId) {
       target = existing.find((x) => x._id === e.targetMemoryId);
+    }
+    // 4. Content gate: identifiers, credentials and exact credit scores never become memories.
+    const gate = checkMemoryContent(e.statement, { visibility: target?.visibility });
+    if (!gate.ok) {
+      skipped.push({ statement: "[withheld]", reason: gate.reason });
+      gateRejections.push(gate.rule);
+      continue;
     }
     const relation = target ? e.relation : "new";
     const p = buildMemory({
@@ -338,6 +347,7 @@ async function proposeFromSource(store: Store, ctx: AuthContext, client: Client,
     proposals: proposals.length,
     skipped: skipped.length,
     ignoredInstructions: output.ignoredInstructions.length,
+    gateRejections,
     extractor,
   });
   return {
@@ -435,6 +445,11 @@ export async function correctMemory(
   if (m.status !== "active") throw conflict("Only the current active version can be corrected.");
   const statement = (input.statement ?? "").trim();
   if (statement.length < 5) throw badRequest("Corrected statement is required.");
+  const gate = checkMemoryContent(statement, { visibility: m.visibility });
+  if (!gate.ok) {
+    await audit(store, ctx, "memory.write_rejected", m._id, client._id, { lineageId: m.lineageId, rule: gate.rule });
+    throw badRequest(gate.reason);
+  }
   const reason = (input.reason ?? "").trim() || "Advisor correction";
   const at = nowIso();
   // The correction itself is recorded as an advisor source, so the new version's evidence is a real quote.

@@ -2,6 +2,7 @@ import type { AuthContext } from "../auth";
 import type { Store } from "../store/types";
 import type { Memory, Task, Visibility } from "../types";
 import { newId, nowIso } from "../util";
+import { appendAudit } from "../audit-chain";
 
 export async function audit(
   store: Store,
@@ -11,7 +12,7 @@ export async function audit(
   clientId: string | undefined,
   details: Record<string, unknown> = {},
 ) {
-  await store.audit.insertOne({
+  await appendAudit(store, {
     _id: newId("aud"),
     firmId: ctx.firmId,
     clientId,
